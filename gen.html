@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор Геймерских Никнеймов</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Генератор Геймерских Никнеймов / Gamer Nickname Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Space Grotesk & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=500;700&family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons for Gaming Aesthetics -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script>
@@ -28,8 +25,6 @@
                         'neon-blue-hover': '0 0 30px rgba(59, 130, 246, 0.6)',
                         'neon-purple': '0 0 20px rgba(168, 85, 247, 0.4)',
                         'neon-purple-hover': '0 0 30px rgba(168, 85, 247, 0.6)',
-                        'neon-xbox': '0 0 20px rgba(16, 124, 16, 0.5)',
-                        'neon-google': '0 0 20px rgba(234, 67, 53, 0.5)',
                     }
                 }
             }
@@ -42,35 +37,143 @@
                 radial-gradient(at 0% 0%, rgba(16, 124, 16, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
         }
-        /* Стилизация скроллбара */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #334155;
-        }
-        /* Анимация плавного появления элементов */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
         .nickname-item {
             animation: fadeIn 0.4s ease-out forwards;
             opacity: 0;
             transform: translateY(10px);
         }
         @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Переключатель языка */
+        .lang-btn {
+            transition: all 0.2s ease;
+        }
+        .lang-btn.active {
+            background: linear-gradient(135deg, #22c55e, #3b82f6);
+            color: #0b0f19;
+            font-weight: 700;
+        }
+
+        /* Прогресс-бар перевода */
+        #translation-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 15, 25, 0.92);
+            backdrop-filter: blur(12px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        #translation-overlay.active {
+            display: flex;
+        }
+
+        .progress-bar-track {
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, #22c55e, #3b82f6, #a855f7);
+            background-size: 200% 100%;
+            animation: progressShimmer 1.5s ease infinite;
+            transition: width 0.4s ease;
+        }
+        @keyframes progressShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Анимация букв заголовка */
+        .translate-pulse {
+            animation: textPulse 2s ease-in-out infinite;
+        }
+        @keyframes textPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Кеш-бейдж */
+        .cache-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-size: 10px;
+            font-weight: 600;
         }
     </style>
 </head>
 <body class="min-h-screen text-slate-100 flex flex-col justify-between font-sans antialiased">
+
+    <!-- Оверлей перевода -->
+    <div id="translation-overlay">
+        <div class="max-w-md w-full mx-4 bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-green-500 to-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <i class="fa-solid fa-language text-2xl text-white"></i>
+                </div>
+                <h3 class="font-display font-bold text-xl text-white translate-pulse" id="overlay-title">
+                    Translating interface...
+                </h3>
+                <p class="text-slate-400 text-sm mt-1" id="overlay-subtitle">AI is adapting all text to English</p>
+            </div>
+
+            <!-- Прогресс-шаги -->
+            <div class="space-y-3 mb-6" id="progress-steps">
+                <div class="flex items-center gap-3 text-sm" id="step-1">
+                    <div class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center shrink-0 step-icon">
+                        <i class="fa-solid fa-circle text-[6px] text-slate-600"></i>
+                    </div>
+                    <span class="text-slate-400 step-label" data-ru="Подготовка текстов интерфейса" data-en="Preparing interface texts">Preparing interface texts</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm" id="step-2">
+                    <div class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center shrink-0 step-icon">
+                        <i class="fa-solid fa-circle text-[6px] text-slate-600"></i>
+                    </div>
+                    <span class="text-slate-400 step-label" data-ru="Отправка запроса в нейросеть" data-en="Sending request to AI">Sending request to AI</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm" id="step-3">
+                    <div class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center shrink-0 step-icon">
+                        <i class="fa-solid fa-circle text-[6px] text-slate-600"></i>
+                    </div>
+                    <span class="text-slate-400 step-label" data-ru="Получение перевода" data-en="Receiving translation">Receiving translation</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm" id="step-4">
+                    <div class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center shrink-0 step-icon">
+                        <i class="fa-solid fa-circle text-[6px] text-slate-600"></i>
+                    </div>
+                    <span class="text-slate-400 step-label" data-ru="Применение перевода к странице" data-en="Applying translation to page">Applying translation to page</span>
+                </div>
+            </div>
+
+            <!-- Прогресс-бар -->
+            <div class="progress-bar-track mb-3">
+                <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-xs text-slate-500">
+                <span id="progress-label">0%</span>
+                <span id="progress-status">Starting...</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Шапка сайта -->
     <header class="border-b border-slate-800 bg-slate-950/60 backdrop-blur-md sticky top-0 z-50">
@@ -83,18 +186,30 @@
                     <h1 class="font-display font-bold text-xl tracking-tight bg-gradient-to-r from-green-400 via-blue-400 to-purple-500 bg-clip-text text-transparent">
                         PLAYSMITH
                     </h1>
-                    <p class="text-xs text-slate-400">Генератор тегов Xbox & Google Play</p>
+                    <p class="text-xs text-slate-400" data-i18n="header-subtitle">Генератор тегов Xbox & Google Play</p>
                 </div>
             </div>
             
-            <div class="flex items-center space-x-2 text-xs text-slate-400 border border-slate-800 px-3 py-1.5 rounded-full bg-slate-900/50">
-                <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                <span>ИИ Генератор v3.5</span>
+            <div class="flex items-center gap-3">
+                <!-- Переключатель языка -->
+                <div class="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 gap-1">
+                    <button id="lang-ru" onclick="switchLanguage('ru')" class="lang-btn active text-xs px-3 py-1.5 rounded-lg transition-all">
+                        🇷🇺 RU
+                    </button>
+                    <button id="lang-en" onclick="switchLanguage('en')" class="lang-btn text-xs px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-all">
+                        🇬🇧 EN
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-2 text-xs text-slate-400 border border-slate-800 px-3 py-1.5 rounded-full bg-slate-900/50">
+                    <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span data-i18n="ai-version">ИИ Генератор v3.5</span>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- Уведомление о работе ИИ-режима под шапкой -->
+    <!-- Баннер DNS -->
     <div class="w-full bg-gradient-to-r from-red-600/95 via-rose-600/90 to-orange-600/95 border-b border-red-500/30 py-3 px-4 shadow-lg shadow-red-950/20 backdrop-blur-sm">
         <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
             <div class="flex items-center space-x-3">
@@ -102,13 +217,14 @@
                     <i class="fa-solid fa-triangle-exclamation"></i>
                 </div>
                 <div class="text-xs md:text-sm font-medium text-white/95 leading-relaxed">
-                    <span class="font-bold">Проблема с ИИ-режимом?</span> Если у вас не работает генерация через нейросеть, смените интернет-провайдера или включите DNS <code class="bg-black/30 border border-white/20 px-2 py-0.5 rounded font-mono select-all text-white font-bold ml-1">46.226.165.53</code>
+                    <span class="font-bold" data-i18n="dns-title">Проблема с ИИ-режимом?</span>
+                    <span data-i18n="dns-desc"> Если у вас не работает генерация через нейросеть, смените интернет-провайдера или включите DNS</span>
+                    <code class="bg-black/30 border border-white/20 px-2 py-0.5 rounded font-mono select-all text-white font-bold ml-1">46.226.165.53</code>
                 </div>
             </div>
-            <!-- Кнопка быстрого копирования DNS -->
-            <button onclick="copyText('46.226.165.53', 'Адрес DNS скопирован в буфер обмена!')" class="shrink-0 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs px-3 py-1.5 rounded-lg border border-white/10 transition-all font-semibold flex items-center space-x-1.5">
+            <button onclick="copyText('46.226.165.53', getDnsMsg())" class="shrink-0 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs px-3 py-1.5 rounded-lg border border-white/10 transition-all font-semibold flex items-center space-x-1.5">
                 <i class="fa-solid fa-copy"></i>
-                <span class="hidden sm:inline">Копировать DNS</span>
+                <span class="hidden sm:inline" data-i18n="dns-copy">Копировать DNS</span>
             </button>
         </div>
     </div>
@@ -116,24 +232,21 @@
     <!-- Основной контент -->
     <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-8 md:py-12 flex flex-col lg:flex-row gap-8">
         
-        <!-- Левая панель: Настройки генерации -->
+        <!-- Левая панель -->
         <section class="w-full lg:w-5/12 space-y-6">
             <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-md shadow-2xl relative overflow-hidden">
-                <!-- Декоративные свечения -->
                 <div class="absolute -top-10 -left-10 w-24 h-24 bg-green-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 <div class="absolute -bottom-10 -right-10 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
                 <h2 class="font-display font-bold text-lg text-white mb-6 flex items-center gap-2">
                     <i class="fa-solid fa-sliders text-green-400"></i>
-                    Настройки генератора
+                    <span data-i18n="settings-title">Настройки генератора</span>
                 </h2>
 
                 <div class="space-y-6">
-                    <!-- Выбор Стиля Платформы -->
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-3">Стиль платформы</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-3" data-i18n="platform-label">Стиль платформы</label>
                         <div class="grid grid-cols-1 gap-3">
-                            <!-- Xbox Live -->
                             <label class="relative flex items-center justify-between p-3.5 rounded-xl border border-slate-800 bg-slate-950/40 cursor-pointer hover:border-green-500/50 transition-all group">
                                 <input type="radio" name="platform" value="xbox" checked class="hidden peer">
                                 <div class="flex items-center space-x-3">
@@ -142,7 +255,7 @@
                                     </div>
                                     <div>
                                         <div class="font-semibold text-sm text-slate-200">Xbox Live Style</div>
-                                        <div class="text-xs text-slate-400">Суровые, эпичные, фэнтезийные</div>
+                                        <div class="text-xs text-slate-400" data-i18n="xbox-desc">Суровые, эпичные, фэнтезийные</div>
                                     </div>
                                 </div>
                                 <div class="w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center peer-checked:border-green-500 peer-checked:bg-green-500 transition-all">
@@ -150,7 +263,6 @@
                                 </div>
                             </label>
 
-                            <!-- Google Play -->
                             <label class="relative flex items-center justify-between p-3.5 rounded-xl border border-slate-800 bg-slate-950/40 cursor-pointer hover:border-blue-500/50 transition-all group">
                                 <input type="radio" name="platform" value="google" class="hidden peer">
                                 <div class="flex items-center space-x-3">
@@ -159,7 +271,7 @@
                                     </div>
                                     <div>
                                         <div class="font-semibold text-sm text-slate-200">Google Play Style</div>
-                                        <div class="text-xs text-slate-400">Забавные, яркие, милые звери</div>
+                                        <div class="text-xs text-slate-400" data-i18n="google-desc">Забавные, яркие, милые звери</div>
                                     </div>
                                 </div>
                                 <div class="w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center peer-checked:border-blue-500 peer-checked:bg-blue-500 transition-all">
@@ -167,7 +279,6 @@
                                 </div>
                             </label>
 
-                            <!-- Смешанный -->
                             <label class="relative flex items-center justify-between p-3.5 rounded-xl border border-slate-800 bg-slate-950/40 cursor-pointer hover:border-purple-500/50 transition-all group">
                                 <input type="radio" name="platform" value="mixed" class="hidden peer">
                                 <div class="flex items-center space-x-3">
@@ -175,8 +286,8 @@
                                         <i class="fa-solid fa-shuffle text-base"></i>
                                     </div>
                                     <div>
-                                        <div class="font-semibold text-sm text-slate-200">Гибридный микс</div>
-                                        <div class="text-xs text-slate-400">Случайное смешение стилей</div>
+                                        <div class="font-semibold text-sm text-slate-200" data-i18n="mixed-name">Гибридный микс</div>
+                                        <div class="text-xs text-slate-400" data-i18n="mixed-desc">Случайное смешение стилей</div>
                                     </div>
                                 </div>
                                 <div class="w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center peer-checked:border-purple-500 peer-checked:bg-purple-500 transition-all">
@@ -186,17 +297,15 @@
                         </div>
                     </div>
 
-                    <!-- Галочки настроек -->
                     <div class="grid grid-cols-1 gap-3">
-                        <!-- Галочка: С цифрами -->
                         <label class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:border-slate-700 transition-all select-none">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
                                     <i class="fa-solid fa-hashtag text-base"></i>
                                 </div>
                                 <div>
-                                    <div class="font-semibold text-sm text-slate-200">С цифрами?</div>
-                                    <div class="text-xs text-slate-400">Добавить 3-4 цифры в конец</div>
+                                    <div class="font-semibold text-sm text-slate-200" data-i18n="numbers-title">С цифрами?</div>
+                                    <div class="text-xs text-slate-400" data-i18n="numbers-desc">Добавить 3-4 цифры в конец</div>
                                 </div>
                             </div>
                             <div class="relative">
@@ -205,15 +314,14 @@
                             </div>
                         </label>
 
-                        <!-- Галочка: ИИ Вариант -->
                         <label class="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:border-slate-700 transition-all select-none">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
                                     <i class="fa-solid fa-brain text-base"></i>
                                 </div>
                                 <div>
-                                    <div class="font-semibold text-sm text-slate-200">Генерация через ИИ</div>
-                                    <div class="text-xs text-slate-400">Использовать нейросеть для подбора</div>
+                                    <div class="font-semibold text-sm text-slate-200" data-i18n="ai-title">Генерация через ИИ</div>
+                                    <div class="text-xs text-slate-400" data-i18n="ai-desc">Использовать нейросеть для подбора</div>
                                 </div>
                             </div>
                             <div class="relative">
@@ -223,59 +331,52 @@
                         </label>
                     </div>
 
-                    <!-- Ползунок количества результатов -->
                     <div class="space-y-2">
                         <div class="flex justify-between items-center">
-                            <label for="count-slider" class="text-sm font-medium text-slate-300">Количество ников</label>
+                            <label for="count-slider" class="text-sm font-medium text-slate-300" data-i18n="count-label">Количество ников</label>
                             <span id="count-display" class="bg-slate-800 text-slate-200 text-xs px-2 py-1 rounded font-bold">5</span>
                         </div>
-                        <input type="range" id="count-slider" min="3" max="10" value="5" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-green-500" id="count-slider">
+                        <input type="range" id="count-slider" min="3" max="10" value="5" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-green-500">
                     </div>
 
-                    <!-- Кнопка генерации -->
                     <button id="btn-generate" class="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-slate-950 font-bold rounded-xl shadow-neon-green hover:shadow-neon-green-hover transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center space-x-2">
                         <i id="btn-icon" class="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
-                        <span id="btn-text">СГЕНЕРИРОВАТЬ НИКИ</span>
+                        <span id="btn-text" data-i18n="btn-generate">СГЕНЕРИРОВАТЬ НИКИ</span>
                     </button>
                 </div>
             </div>
         </section>
 
-        <!-- Правая панель: Результаты -->
+        <!-- Правая панель -->
         <section class="w-full lg:w-7/12 flex flex-col">
             <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-md shadow-2xl flex-grow flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
                         <h2 class="font-display font-bold text-lg text-white flex items-center gap-2">
                             <i class="fa-solid fa-list-ul text-blue-400"></i>
-                            Сгенерированные имена
+                            <span data-i18n="results-title">Сгенерированные имена</span>
                         </h2>
                         <button id="btn-copy-all" class="text-xs text-slate-400 hover:text-white flex items-center space-x-1.5 transition-colors">
                             <i class="fa-solid fa-clone"></i>
-                            <span>Копировать все</span>
+                            <span data-i18n="copy-all">Копировать все</span>
                         </button>
                     </div>
-
-                    <!-- Контейнер со списком результатов -->
                     <div id="nicknames-list" class="space-y-3 min-h-[250px] flex flex-col justify-center">
                         <div class="text-center text-slate-500 py-12">
                             <i class="fa-solid fa-dice text-4xl mb-3 text-slate-700 block"></i>
-                            Нажмите кнопку «Сгенерировать», чтобы получить идеальный тег!
+                            <span data-i18n="empty-state">Нажмите кнопку "Сгенерировать", чтобы получить идеальный тег!</span>
                         </div>
                     </div>
                 </div>
-
-                <!-- Быстрая инструкция внизу -->
                 <div class="mt-6 pt-4 border-t border-slate-800/60 flex items-center gap-3 text-xs text-slate-400">
                     <i class="fa-solid fa-circle-info text-blue-400 text-sm shrink-0"></i>
-                    <span>Нажмите на любой никнейм, чтобы быстро скопировать его в буфер обмена.</span>
+                    <span data-i18n="tip">Нажмите на любой никнейм, чтобы быстро скопировать его в буфер обмена.</span>
                 </div>
             </div>
         </section>
-
     </main>
 
-    <!-- Уведомления-тосты -->
+    <!-- Тост -->
     <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 ease-out flex items-center space-x-3 bg-slate-900 border border-green-500/50 text-white px-4 py-3 rounded-xl shadow-lg shadow-green-500/10">
         <div id="toast-icon-bg" class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
             <i id="toast-icon" class="fa-solid fa-check text-xs"></i>
@@ -286,377 +387,550 @@
     <!-- Футер -->
     <footer class="border-t border-slate-800 bg-slate-950/40 py-6 text-center text-xs text-slate-500">
         <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>© 2026 PlaySmith. Создано в соответствии с шаблонами именования Microsoft Xbox Live & Google Play Games.</p>
+            <p>
+                <span data-i18n="footer-copy">© 2026 PlaySmith. Создано в соответствии с шаблонами именования Microsoft Xbox Live & Google Play Games.</span>
+                <span id="cache-badge-container"></span>
+            </p>
             <div class="flex space-x-4">
-                <span class="hover:text-slate-400 transition-colors cursor-pointer">Правила</span>
-                <span class="hover:text-slate-400 transition-colors cursor-pointer">Поддержка</span>
+                <span class="hover:text-slate-400 transition-colors cursor-pointer" data-i18n="footer-rules">Правила</span>
+                <span class="hover:text-slate-400 transition-colors cursor-pointer" data-i18n="footer-support">Поддержка</span>
             </div>
         </div>
     </footer>
 
-    <!-- Логика генератора -->
     <script>
-        // Предустановленные скрытые настройки ИИ
-        const AI_CONFIG = {
-            baseUrl: "https://royal-art-f8ba.radiolivemanager.workers.dev/v1",
-            apiKey: "sk-free-api",
-            model: "nvidia-code"
-        };
+    // ============================================================
+    //  КОНФИГУРАЦИЯ
+    // ============================================================
+    const AI_CONFIG = {
+        baseUrl: "https://royal-art-f8ba.radiolivemanager.workers.dev/v1",
+        apiKey: "sk-free-api",
+        model: "nvidia-code"
+    };
 
-        // База слов для классической оффлайн-генерации
-        const vocabularies = {
-            xbox: {
-                adjectives: [
-                    'Shadow', 'Frost', 'Crimson', 'Iron', 'Silent', 'Ghost', 'Quantum', 'Primal', 
-                    'Alpha', 'Apex', 'Cyber', 'Void', 'Mystic', 'Dark', 'Cosmic', 'Phantom', 
-                    'Rogue', 'Savage', 'Stealth', 'Thunder', 'Viper', 'Wolf', 'Zenith', 'Cobra',
-                    'Fierce', 'Sly', 'Grim', 'Rapid', 'Golden', 'Neon', 'Lunar', 'Ancient', 'Infinite'
-                ],
-                nouns: [
-                    'Vortex', 'Titan', 'Nova', 'Fury', 'Prowler', 'Apex', 'Rider', 'Echo', 'Gryphon', 
-                    'Hunter', 'Knight', 'Spectre', 'Beast', 'Ranger', 'Rebel', 'Dragon', 'Reaper', 
-                    'Ninja', 'Samurai', 'Falcon', 'Hazard', 'Doom', 'Hydra', 'Saber', 'Odin', 'Zeus'
-                ]
-            },
-            google: {
-                adjectives: [
-                    'Happy', 'Lazy', 'Neon', 'Turbo', 'Mad', 'Cosmic', 'Swift', 'Solar', 'Funny', 
-                    'Pixel', 'Crazy', 'Sleepy', 'Flying', 'Golden', 'Magic', 'Super', 'Mega', 
-                    'Hyper', 'Tiny', 'Jolly', 'Brave', 'Clever', 'Dancing', 'Fuzzy', 'Sneaky',
-                    'Lucky', 'Spicy', 'Chilly', 'Shiny', 'Mini', 'Funky', 'Wobbly', 'Jumpy'
-                ],
-                nouns: [
-                    'Wizard', 'Griffin', 'Phoenix', 'Pixel', 'Cyborg', 'Goat', 'Badger', 'Panda', 
-                    'Goblin', 'Turtle', 'Koala', 'Sloth', 'Alpaca', 'Hamster', 'Fox', 'Dino', 
-                    'Raccoon', 'Penguin', 'Monkey', 'Squirrel', 'Frog', 'Duck', 'Cactus', 'Unicorn',
-                    'Yeti', 'Badger', 'Owl', 'Otter', 'Sloth', 'Llama', 'Pug', 'Kitten'
-                ]
+    const ANTHROPIC_CONFIG = {
+        endpoint: "https://api.anthropic.com/v1/messages",
+        model: "claude-sonnet-4-6"
+    };
+
+    // Кеш-ключ в localStorage
+    const CACHE_KEY = "playsmith_en_translation_v1";
+
+    // ============================================================
+    //  СЛОВАРИ (RU — исходные тексты)
+    // ============================================================
+    const i18nBase = {
+        "header-subtitle":  "Генератор тегов Xbox & Google Play",
+        "ai-version":       "ИИ Генератор v3.5",
+        "dns-title":        "Проблема с ИИ-режимом?",
+        "dns-desc":         " Если у вас не работает генерация через нейросеть, смените интернет-провайдера или включите DNS",
+        "dns-copy":         "Копировать DNS",
+        "settings-title":   "Настройки генератора",
+        "platform-label":   "Стиль платформы",
+        "xbox-desc":        "Суровые, эпичные, фэнтезийные",
+        "google-desc":      "Забавные, яркие, милые звери",
+        "mixed-name":       "Гибридный микс",
+        "mixed-desc":       "Случайное смешение стилей",
+        "numbers-title":    "С цифрами?",
+        "numbers-desc":     "Добавить 3-4 цифры в конец",
+        "ai-title":         "Генерация через ИИ",
+        "ai-desc":          "Использовать нейросеть для подбора",
+        "count-label":      "Количество ников",
+        "btn-generate":     "СГЕНЕРИРОВАТЬ НИКИ",
+        "btn-generate-ai":  "СГЕНЕРИРОВАТЬ С ИИ",
+        "btn-generating":   "ГЕНЕРАЦИЯ...",
+        "btn-ai-thinking":  "ИИ ДУМАЕТ...",
+        "results-title":    "Сгенерированные имена",
+        "copy-all":         "Копировать все",
+        "empty-state":      "Нажмите кнопку «Сгенерировать», чтобы получить идеальный тег!",
+        "tip":              "Нажмите на любой никнейм, чтобы быстро скопировать его в буфер обмена.",
+        "footer-copy":      "© 2026 PlaySmith. Создано в соответствии с шаблонами именования Microsoft Xbox Live & Google Play Games.",
+        "footer-rules":     "Правила",
+        "footer-support":   "Поддержка",
+        "toast-copied":     "Никнейм скопирован в буфер!",
+        "toast-copied-all": "Весь список ников скопирован в буфер!",
+        "toast-dns":        "Адрес DNS скопирован в буфер обмена!",
+        "ai-fallback-err":  "Ошибка ИИ. Мягкое переключение на локальный генератор.",
+        "ai-loading-text":  "Нейросеть генерирует ники по вашим параметрам...",
+        "xbox-ai-style":    "Xbox Live (эпичный, фэнтезийный, суровый, фантастический стиль)",
+        "google-ai-style":  "Google Play Games (забавный, милый, яркий, аркадный стиль с животными или роботами)",
+        "mixed-ai-style":   "смешанный стиль из Xbox и Google Play",
+        "numbers-ai-yes":   "ОБЯЗАТЕЛЬНО добавь в конец каждого никнейма 3 или 4 случайные цифры.",
+        "numbers-ai-no":    "НЕ добавляй никаких цифр в конец ников."
+    };
+
+    // Текущий язык и переводы
+    let currentLang = "ru";
+    let translations = {}; // заполняется после перевода
+
+    // ============================================================
+    //  ПЕРЕВОД: переключение языков
+    // ============================================================
+    async function switchLanguage(lang) {
+        if (lang === currentLang) return;
+
+        if (lang === "en") {
+            // Проверяем кеш
+            const cached = loadFromCache();
+            if (cached) {
+                applyTranslations(cached);
+                setLangUI("en");
+                showCacheBadge(true);
+                return;
             }
-        };
-
-        // DOM элементы
-        const btnGenerate = document.getElementById('btn-generate');
-        const btnIcon = document.getElementById('btn-icon');
-        const btnText = document.getElementById('btn-text');
-        const btnCopyAll = document.getElementById('btn-copy-all');
-        const nicknamesList = document.getElementById('nicknames-list');
-        const countSlider = document.getElementById('count-slider');
-        const countDisplay = document.getElementById('count-display');
-        const includeNumbersCheck = document.getElementById('include-numbers');
-        const useAiCheck = document.getElementById('use-ai');
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        const toastIcon = document.getElementById('toast-icon');
-        const toastIconBg = document.getElementById('toast-icon-bg');
-
-        // Обновление цифры на слайдере количества
-        countSlider.addEventListener('input', (e) => {
-            countDisplay.textContent = e.target.value;
-        });
-
-        // Плавное переключение стилей кнопки при активации ИИ режима
-        useAiCheck.addEventListener('change', (e) => {
-            handleAiToggleChange(e.target.checked);
-        });
-
-        function handleAiToggleChange(isAiActive) {
-            if (isAiActive) {
-                btnGenerate.classList.remove('from-green-500', 'to-emerald-600', 'shadow-neon-green', 'hover:shadow-neon-green-hover');
-                btnGenerate.classList.add('from-purple-600', 'to-indigo-600', 'shadow-neon-purple', 'hover:shadow-neon-purple-hover');
-                btnText.textContent = 'СГЕНЕРИРОВАТЬ С ИИ';
-            } else {
-                btnGenerate.classList.remove('from-purple-600', 'to-indigo-600', 'shadow-neon-purple', 'hover:shadow-neon-purple-hover');
-                btnGenerate.classList.add('from-green-500', 'to-emerald-600', 'shadow-neon-green', 'hover:shadow-neon-green-hover');
-                btnText.textContent = 'СГЕНЕРИРОВАТЬ НИКИ';
-            }
+            // Запускаем перевод через ИИ
+            await runTranslation();
+        } else {
+            // Возврат на русский — просто применяем исходные тексты
+            applyTranslations(i18nBase);
+            setLangUI("ru");
+            showCacheBadge(false);
         }
+    }
 
-        // Вспомогательная функция выбора случайного элемента массива
-        function getRandomElement(arr) {
-            return arr[Math.floor(Math.random() * arr.length)];
+    function setLangUI(lang) {
+        currentLang = lang;
+        document.documentElement.lang = lang === "ru" ? "ru" : "en";
+
+        const btnRu = document.getElementById("lang-ru");
+        const btnEn = document.getElementById("lang-en");
+
+        if (lang === "ru") {
+            btnRu.classList.add("active");
+            btnEn.classList.remove("active");
+            btnEn.classList.add("text-slate-400");
+        } else {
+            btnEn.classList.add("active");
+            btnRu.classList.remove("active");
+            btnRu.classList.add("text-slate-400");
         }
+    }
 
-        // Основная функция локальной оффлайн генерации одного ника
-        function generateSingleNickname(style, useNumbers) {
-            let selectedAdj = '';
-            let selectedNoun = '';
+    // ============================================================
+    //  ИИ ПЕРЕВОД + ПРОГРЕСС-БАР
+    // ============================================================
+    async function runTranslation() {
+        const overlay = document.getElementById("translation-overlay");
+        overlay.classList.add("active");
 
-            if (style === 'xbox') {
-                selectedAdj = getRandomElement(vocabularies.xbox.adjectives);
-                selectedNoun = getRandomElement(vocabularies.xbox.nouns);
-            } else if (style === 'google') {
-                selectedAdj = getRandomElement(vocabularies.google.adjectives);
-                selectedNoun = getRandomElement(vocabularies.google.nouns);
-            } else {
-                const randStyleAdj = Math.random() > 0.5 ? 'xbox' : 'google';
-                const randStyleNoun = Math.random() > 0.5 ? 'xbox' : 'google';
-                selectedAdj = getRandomElement(vocabularies[randStyleAdj].adjectives);
-                selectedNoun = getRandomElement(vocabularies[randStyleNoun].nouns);
-            }
+        try {
+            // Шаг 1: Подготовка
+            await setStep(1, 10, "Collecting texts...");
+            await sleep(400);
 
-            let nickname = selectedAdj + selectedNoun;
+            const keysToTranslate = Object.keys(i18nBase);
+            const textsJson = JSON.stringify(i18nBase, null, 2);
 
-            if (useNumbers) {
-                const length = Math.random() > 0.5 ? 3 : 4;
-                let numbers = '';
-                for (let i = 0; i < length; i++) {
-                    numbers += Math.floor(Math.random() * 10);
-                }
-                nickname += numbers;
-            }
+            // Шаг 2: Запрос
+            await setStep(2, 30, "Calling AI API...");
 
-            return {
-                name: nickname,
-                adj: selectedAdj,
-                noun: selectedNoun,
-                style: style === 'mixed' ? 'Mixed' : style.toUpperCase()
-            };
-        }
+            const prompt = `You are a professional localization expert. Translate the following JSON object values from Russian to English. Keep the keys exactly as-is. Keep the same tone — gaming, energetic, slightly informal. Return ONLY valid JSON, no markdown, no explanation.
 
-        // Копирование данных в буфер обмена
-        function copyText(text, message = 'Никнейм скопирован в буфер!') {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showToast(message, 'success');
-                } else {
-                    console.error('Не удалось скопировать текст');
-                }
-            } catch (err) {
-                console.error('Ошибка копирования:', err);
-            }
-            
-            document.body.removeChild(textarea);
-        }
+JSON to translate:
+${textsJson}`;
 
-        // Показ уведомления (success или error)
-        function showToast(message, type = 'success') {
-            toastMessage.textContent = message;
-            
-            if (type === 'error') {
-                toast.classList.remove('border-green-500/50', 'shadow-green-500/10');
-                toast.classList.add('border-red-500/50', 'shadow-red-500/10');
-                toastIconBg.className = 'w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center text-red-400';
-                toastIcon.className = 'fa-solid fa-triangle-exclamation text-xs';
-            } else {
-                toast.classList.remove('border-red-500/50', 'shadow-red-500/10');
-                toast.classList.add('border-green-500/50', 'shadow-green-500/10');
-                toastIconBg.className = 'w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400';
-                toastIcon.className = 'fa-solid fa-check text-xs';
-            }
-
-            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
-            toast.classList.add('translate-y-0', 'opacity-100');
-            
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
-            }, 3000);
-        }
-
-        // Интеграция генерации ИИ по защищенным параметрам
-        async function generateWithAI(platform, useNumbers, count) {
-            const platformDesc = platform === 'xbox' ? 'Xbox Live (эпичный, фэнтезийный, суровый, фантастический стиль)' : 
-                                 platform === 'google' ? 'Google Play Games (забавный, милый, яркий, аркадный стиль с животными или роботами)' : 
-                                 'смешанный стиль из Xbox и Google Play';
-
-            const numberInstruction = useNumbers 
-                ? 'ОБЯЗАТЕЛЬНО добавь в конец каждого никнейма 3 или 4 случайные цифры.' 
-                : 'НЕ добавляй никаких цифр в конец ников.';
-
-            const systemPrompt = `Ты — креативный ИИ-генератор игровых тегов и никнеймов. Твоя задача — сгенерировать ровно ${count} ников.`;
-            
-            const userPrompt = `Сгенерируй ровно ${count} уникальных игровых никнеймов на английском языке в стиле: ${platformDesc}.
-${numberInstruction}
-
-Ответ верни СТРОГО в формате валидного JSON массива объектов, без лишнего текста и без форматирования markdown (без \`\`\`json).
-Каждый объект должен иметь следующую структуру:
-[
-  {
-    "name": "СгенерированныйНикнейм",
-    "adj": "Перевод/Суть прилагательного на русском",
-    "noun": "Перевод/Суть существительного на русском",
-    "style": "Xbox или Google"
-  }
-]`;
-
-            try {
-                const response = await fetch(`${AI_CONFIG.baseUrl}/chat/completions`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${AI_CONFIG.apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: AI_CONFIG.model,
-                        messages: [
-                            { role: "system", content: systemPrompt },
-                            { role: "user", content: userPrompt }
-                        ],
-                        temperature: 0.8
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Ошибка сервера: ${response.status}`);
-                }
-
-                const data = await response.json();
-                let content = data.choices?.[0]?.message?.content?.trim();
-                
-                if (!content) {
-                    throw new Error("Пустой ответ от ИИ.");
-                }
-
-                // Очистка от лишних markdown тегов
-                content = content.replace(/```json/g, '').replace(/```/g, '').trim();
-                
-                // Надежное вычленение JSON массива на случай лишнего текста от ИИ
-                const jsonMatch = content.match(/\[\s*\{[\s\S]*\}\s*\]/);
-                if (jsonMatch) {
-                    content = jsonMatch[0];
-                }
-                
-                const parsedResults = JSON.parse(content);
-                if (!Array.isArray(parsedResults)) {
-                    throw new Error("Неверный формат ответа.");
-                }
-
-                return parsedResults;
-            } catch (error) {
-                console.error("AI Generation failed:", error);
-                throw error;
-            }
-        }
-
-        // Отрисовка сгенерированных никнеймов на экран
-        async function handleGenerate() {
-            const activePlatformInput = document.querySelector('input[name="platform"]:checked');
-            const platform = activePlatformInput ? activePlatformInput.value : 'xbox';
-            const useNumbers = includeNumbersCheck.checked;
-            const count = parseInt(countSlider.value, 10);
-            const isAiActive = useAiCheck.checked;
-
-            // Блокируем кнопку на время генерации
-            btnGenerate.disabled = true;
-            btnIcon.className = "fa-solid fa-circle-notch animate-spin";
-            btnText.textContent = isAiActive ? "ИИ ДУМАЕТ..." : "ГЕНЕРАЦИЯ...";
-
-            if (isAiActive) {
-                nicknamesList.innerHTML = `
-                    <div class="text-center text-slate-400 py-12 animate-pulse">
-                        <i class="fa-solid fa-brain text-4xl mb-3 text-purple-500 block"></i>
-                        Нейросеть генерирует ники по вашим параметрам...
-                    </div>
-                `;
-            }
-
-            try {
-                let currentNicknames = [];
-
-                if (isAiActive) {
-                    // Генерация с помощью ИИ
-                    const aiResults = await generateWithAI(platform, useNumbers, count);
-                    nicknamesList.innerHTML = '';
-                    
-                    aiResults.forEach((nickData, i) => {
-                        const styleClass = nickData.style.toLowerCase();
-                        let platformIcon = '<i class="fa-brands fa-xbox text-green-500"></i>';
-                        if (styleClass.includes('google')) {
-                            platformIcon = '<i class="fa-brands fa-google-play text-blue-400"></i>';
-                        } else if (styleClass.includes('xbox')) {
-                            platformIcon = '<i class="fa-brands fa-xbox text-green-500"></i>';
-                        } else {
-                            platformIcon = '<i class="fa-solid fa-brain text-purple-400"></i>';
-                        }
-
-                        currentNicknames.push(nickData.name);
-                        createNicknameItem(nickData.name, nickData.adj, nickData.noun, platformIcon, i);
-                    });
-                } else {
-                    // Локальная быстрая генерация
-                    nicknamesList.innerHTML = '';
-                    for (let i = 0; i < count; i++) {
-                        const nickData = generateSingleNickname(platform, useNumbers);
-                        currentNicknames.push(nickData.name);
-
-                        let platformIcon = '<i class="fa-brands fa-xbox text-green-500"></i>';
-                        if (platform === 'google' || (platform === 'mixed' && vocabularies.google.adjectives.includes(nickData.adj))) {
-                            platformIcon = '<i class="fa-brands fa-google-play text-blue-400"></i>';
-                        }
-
-                        createNicknameItem(nickData.name, nickData.adj, nickData.noun, platformIcon, i);
-                    }
-                }
-
-                // Логика копирования всего списка
-                btnCopyAll.onclick = () => {
-                    const allText = currentNicknames.join('\n');
-                    copyText(allText, 'Весь список ников скопирован в буфер!');
-                };
-
-            } catch (err) {
-                showToast(`Ошибка ИИ. Мягкое переключение на локальный генератор.`, 'error');
-                // Фолбек на локальную генерацию
-                useAiCheck.checked = false;
-                handleAiToggleChange(false);
-                await handleGenerate();
-            } finally {
-                // Возвращаем кнопку в исходное состояние
-                btnGenerate.disabled = false;
-                btnIcon.className = isAiActive ? "fa-solid fa-brain" : "fa-solid fa-wand-magic-sparkles animate-pulse";
-                btnText.textContent = isAiActive ? "СГЕНЕРИРОВАТЬ С ИИ" : "СГЕНЕРИРОВАТЬ НИКИ";
-            }
-        }
-
-        // Вспомогательная функция сборки элемента списка никнеймов
-        function createNicknameItem(name, adj, noun, iconHtml, delayIndex) {
-            const item = document.createElement('div');
-            item.className = 'nickname-item group bg-slate-950/50 hover:bg-slate-950 border border-slate-800/80 hover:border-slate-700 rounded-xl p-3.5 flex items-center justify-between transition-all duration-300 cursor-pointer select-none';
-            item.style.animationDelay = `${delayIndex * 60}ms`;
-
-            item.innerHTML = `
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-sm border border-slate-800">
-                        ${iconHtml}
-                    </div>
-                    <div>
-                        <span class="font-display font-bold text-base md:text-lg tracking-wide text-slate-100 group-hover:text-white transition-colors">
-                            ${name}
-                        </span>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <span class="text-[10px] text-slate-500 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-full hidden sm:inline-block">
-                        ${adj} + ${noun}
-                    </span>
-                    <button class="w-8 h-8 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-green-400 flex items-center justify-center transition-all border border-slate-800/60 active:scale-90">
-                        <i class="fa-solid fa-copy"></i>
-                    </button>
-                </div>
-            `;
-
-            item.addEventListener('click', () => {
-                copyText(name, `Скопировано: ${name}`);
+            const response = await fetch(ANTHROPIC_CONFIG.endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: ANTHROPIC_CONFIG.model,
+                    max_tokens: 1000,
+                    messages: [{ role: "user", content: prompt }]
+                })
             });
 
-            nicknamesList.appendChild(item);
+            if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+            // Шаг 3: Получение
+            await setStep(3, 70, "Processing response...");
+            const data = await response.json();
+
+            let content = data.content?.[0]?.text?.trim() || "";
+            content = content.replace(/```json/g, "").replace(/```/g, "").trim();
+
+            // Извлекаем JSON
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error("No JSON in response");
+
+            const translated = JSON.parse(jsonMatch[0]);
+
+            // Шаг 4: Применение
+            await setStep(4, 90, "Applying to page...");
+            await sleep(400);
+
+            // Сохраняем в кеш
+            saveToCache(translated);
+
+            await setProgress(100, "Done!");
+            await sleep(500);
+
+            applyTranslations(translated);
+            setLangUI("en");
+            showCacheBadge(false); // только что перевели, кеш только что создан
+
+        } catch (err) {
+            console.error("Translation failed:", err);
+            showToast("Translation failed. Try again.", "error");
+        } finally {
+            overlay.classList.remove("active");
+            resetProgressUI();
+        }
+    }
+
+    async function setStep(stepNum, progressPct, statusText) {
+        // Отмечаем предыдущие шаги как выполненные
+        for (let i = 1; i < stepNum; i++) {
+            const stepEl = document.getElementById(`step-${i}`);
+            if (stepEl) {
+                const icon = stepEl.querySelector(".step-icon");
+                icon.innerHTML = '<i class="fa-solid fa-check text-[10px] text-green-400"></i>';
+                icon.classList.remove("border-slate-700");
+                icon.classList.add("border-green-500", "bg-green-500/10");
+                stepEl.querySelector(".step-label").classList.remove("text-slate-400");
+                stepEl.querySelector(".step-label").classList.add("text-white");
+            }
+        }
+        // Текущий шаг — активный
+        const currentEl = document.getElementById(`step-${stepNum}`);
+        if (currentEl) {
+            const icon = currentEl.querySelector(".step-icon");
+            icon.innerHTML = '<i class="fa-solid fa-circle-notch text-[10px] text-blue-400 animate-spin"></i>';
+            icon.classList.add("border-blue-500", "bg-blue-500/10");
+            currentEl.querySelector(".step-label").classList.remove("text-slate-400");
+            currentEl.querySelector(".step-label").classList.add("text-blue-300");
         }
 
-        // Слушатели событий
-        btnGenerate.addEventListener('click', handleGenerate);
+        await setProgress(progressPct, statusText);
+    }
 
-        // Инициализация при первом запуске
-        window.onload = function() {
-            handleGenerate();
-        };
+    async function setProgress(pct, status) {
+        document.getElementById("progress-fill").style.width = pct + "%";
+        document.getElementById("progress-label").textContent = pct + "%";
+        document.getElementById("progress-status").textContent = status;
+        await sleep(50);
+    }
+
+    function resetProgressUI() {
+        document.getElementById("progress-fill").style.width = "0%";
+        document.getElementById("progress-label").textContent = "0%";
+        document.getElementById("progress-status").textContent = "Starting...";
+
+        for (let i = 1; i <= 4; i++) {
+            const el = document.getElementById(`step-${i}`);
+            if (!el) continue;
+            const icon = el.querySelector(".step-icon");
+            icon.innerHTML = '<i class="fa-solid fa-circle text-[6px] text-slate-600"></i>';
+            icon.className = "w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center shrink-0 step-icon";
+            const label = el.querySelector(".step-label");
+            label.className = "text-slate-400 step-label";
+        }
+    }
+
+    // ============================================================
+    //  ПРИМЕНЕНИЕ ПЕРЕВОДОВ К DOM
+    // ============================================================
+    function applyTranslations(dict) {
+        document.querySelectorAll("[data-i18n]").forEach(el => {
+            const key = el.getAttribute("data-i18n");
+            if (dict[key] !== undefined) {
+                el.textContent = dict[key];
+            }
+        });
+
+        // Обновляем текст кнопки генерации с учётом состояния ИИ
+        const isAi = document.getElementById("use-ai").checked;
+        const btnText = document.getElementById("btn-text");
+        if (btnText) {
+            btnText.textContent = isAi ? (dict["btn-generate-ai"] || dict["btn-generate"]) : dict["btn-generate"];
+        }
+
+        // Сохраняем актуальный словарь
+        if (dict !== i18nBase) {
+            translations = dict;
+        }
+    }
+
+    function t(key) {
+        if (currentLang === "ru") return i18nBase[key] || key;
+        return translations[key] || i18nBase[key] || key;
+    }
+
+    // ============================================================
+    //  КЕШ (localStorage)
+    // ============================================================
+    function saveToCache(data) {
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+                data,
+                savedAt: Date.now(),
+                version: 1
+            }));
+        } catch (e) {
+            console.warn("Cache save failed:", e);
+        }
+    }
+
+    function loadFromCache() {
+        try {
+            const raw = localStorage.getItem(CACHE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            // Кеш живёт 30 дней
+            const maxAge = 30 * 24 * 60 * 60 * 1000;
+            if (Date.now() - parsed.savedAt > maxAge) {
+                localStorage.removeItem(CACHE_KEY);
+                return null;
+            }
+            return parsed.data;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function clearCache() {
+        localStorage.removeItem(CACHE_KEY);
+    }
+
+    function showCacheBadge(fromCache) {
+        const container = document.getElementById("cache-badge-container");
+        if (!container) return;
+        if (fromCache) {
+            container.innerHTML = `
+                <span class="cache-badge ml-2">
+                    <i class="fa-solid fa-bolt"></i> Cached translation
+                </span>`;
+        } else {
+            container.innerHTML = "";
+        }
+    }
+
+    function getDnsMsg() {
+        return t("toast-dns");
+    }
+
+    // ============================================================
+    //  БАЗА СЛОВ
+    // ============================================================
+    const vocabularies = {
+        xbox: {
+            adjectives: ['Shadow','Frost','Crimson','Iron','Silent','Ghost','Quantum','Primal','Alpha','Apex','Cyber','Void','Mystic','Dark','Cosmic','Phantom','Rogue','Savage','Stealth','Thunder','Viper','Wolf','Zenith','Cobra','Fierce','Sly','Grim','Rapid','Golden','Neon','Lunar','Ancient','Infinite'],
+            nouns: ['Vortex','Titan','Nova','Fury','Prowler','Apex','Rider','Echo','Gryphon','Hunter','Knight','Spectre','Beast','Ranger','Rebel','Dragon','Reaper','Ninja','Samurai','Falcon','Hazard','Doom','Hydra','Saber','Odin','Zeus']
+        },
+        google: {
+            adjectives: ['Happy','Lazy','Neon','Turbo','Mad','Cosmic','Swift','Solar','Funny','Pixel','Crazy','Sleepy','Flying','Golden','Magic','Super','Mega','Hyper','Tiny','Jolly','Brave','Clever','Dancing','Fuzzy','Sneaky','Lucky','Spicy','Chilly','Shiny','Mini','Funky','Wobbly','Jumpy'],
+            nouns: ['Wizard','Griffin','Phoenix','Pixel','Cyborg','Goat','Badger','Panda','Goblin','Turtle','Koala','Sloth','Alpaca','Hamster','Fox','Dino','Raccoon','Penguin','Monkey','Squirrel','Frog','Duck','Cactus','Unicorn','Yeti','Owl','Otter','Llama','Pug','Kitten']
+        }
+    };
+
+    // ============================================================
+    //  ГЕНЕРАТОР НИКНЕЙМОВ
+    // ============================================================
+    const btnGenerate = document.getElementById('btn-generate');
+    const btnIcon = document.getElementById('btn-icon');
+    const btnText = document.getElementById('btn-text');
+    const btnCopyAll = document.getElementById('btn-copy-all');
+    const nicknamesList = document.getElementById('nicknames-list');
+    const countSlider = document.getElementById('count-slider');
+    const countDisplay = document.getElementById('count-display');
+    const includeNumbersCheck = document.getElementById('include-numbers');
+    const useAiCheck = document.getElementById('use-ai');
+
+    countSlider.addEventListener('input', e => { countDisplay.textContent = e.target.value; });
+
+    useAiCheck.addEventListener('change', e => { handleAiToggleChange(e.target.checked); });
+
+    function handleAiToggleChange(isAiActive) {
+        if (isAiActive) {
+            btnGenerate.classList.remove('from-green-500','to-emerald-600','shadow-neon-green','hover:shadow-neon-green-hover');
+            btnGenerate.classList.add('from-purple-600','to-indigo-600','shadow-neon-purple','hover:shadow-neon-purple-hover');
+            btnText.textContent = t("btn-generate-ai");
+        } else {
+            btnGenerate.classList.remove('from-purple-600','to-indigo-600','shadow-neon-purple','hover:shadow-neon-purple-hover');
+            btnGenerate.classList.add('from-green-500','to-emerald-600','shadow-neon-green','hover:shadow-neon-green-hover');
+            btnText.textContent = t("btn-generate");
+        }
+    }
+
+    function getRandomElement(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function generateSingleNickname(style, useNumbers) {
+        let adj = '', noun = '';
+        if (style === 'xbox') {
+            adj = getRandomElement(vocabularies.xbox.adjectives);
+            noun = getRandomElement(vocabularies.xbox.nouns);
+        } else if (style === 'google') {
+            adj = getRandomElement(vocabularies.google.adjectives);
+            noun = getRandomElement(vocabularies.google.nouns);
+        } else {
+            adj = getRandomElement(vocabularies[Math.random() > 0.5 ? 'xbox' : 'google'].adjectives);
+            noun = getRandomElement(vocabularies[Math.random() > 0.5 ? 'xbox' : 'google'].nouns);
+        }
+        let nickname = adj + noun;
+        if (useNumbers) {
+            const len = Math.random() > 0.5 ? 3 : 4;
+            for (let i = 0; i < len; i++) nickname += Math.floor(Math.random() * 10);
+        }
+        return { name: nickname, adj, noun, style: style === 'mixed' ? 'Mixed' : style.toUpperCase() };
+    }
+
+    async function generateWithAI(platform, useNumbers, count) {
+        const platformDesc = platform === 'xbox' ? t("xbox-ai-style") :
+                             platform === 'google' ? t("google-ai-style") : t("mixed-ai-style");
+        const numberInstruction = useNumbers ? t("numbers-ai-yes") : t("numbers-ai-no");
+        const systemPrompt = `You are a creative AI game tag and nickname generator. Your task is to generate exactly ${count} nicknames.`;
+        const userPrompt = `Generate exactly ${count} unique gaming nicknames in English in the style: ${platformDesc}.\n${numberInstruction}\n\nReturn STRICTLY a valid JSON array of objects, no extra text, no markdown.\nEach object:\n[\n  {\n    "name": "GeneratedNickname",\n    "adj": "Adjective part meaning",\n    "noun": "Noun part meaning",\n    "style": "Xbox or Google"\n  }\n]`;
+
+        const response = await fetch(`${AI_CONFIG.baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${AI_CONFIG.apiKey}` },
+            body: JSON.stringify({
+                model: AI_CONFIG.model,
+                messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+                temperature: 0.8
+            })
+        });
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+        const data = await response.json();
+        let content = data.choices?.[0]?.message?.content?.trim() || "";
+        content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+        const jsonMatch = content.match(/\[\s*\{[\s\S]*\}\s*\]/);
+        if (jsonMatch) content = jsonMatch[0];
+        const parsed = JSON.parse(content);
+        if (!Array.isArray(parsed)) throw new Error("Invalid format");
+        return parsed;
+    }
+
+    async function handleGenerate() {
+        const platform = document.querySelector('input[name="platform"]:checked')?.value || 'xbox';
+        const useNumbers = includeNumbersCheck.checked;
+        const count = parseInt(countSlider.value, 10);
+        const isAiActive = useAiCheck.checked;
+
+        btnGenerate.disabled = true;
+        btnIcon.className = "fa-solid fa-circle-notch animate-spin";
+        btnText.textContent = isAiActive ? t("btn-ai-thinking") : t("btn-generating");
+
+        if (isAiActive) {
+            nicknamesList.innerHTML = `
+                <div class="text-center text-slate-400 py-12 animate-pulse">
+                    <i class="fa-solid fa-brain text-4xl mb-3 text-purple-500 block"></i>
+                    ${t("ai-loading-text")}
+                </div>`;
+        }
+
+        try {
+            let currentNicknames = [];
+            nicknamesList.innerHTML = '';
+
+            if (isAiActive) {
+                const aiResults = await generateWithAI(platform, useNumbers, count);
+                aiResults.forEach((nick, i) => {
+                    const styleClass = (nick.style || '').toLowerCase();
+                    let icon = '<i class="fa-brands fa-xbox text-green-500"></i>';
+                    if (styleClass.includes('google')) icon = '<i class="fa-brands fa-google-play text-blue-400"></i>';
+                    else if (styleClass.includes('mixed')) icon = '<i class="fa-solid fa-brain text-purple-400"></i>';
+                    currentNicknames.push(nick.name);
+                    createNicknameItem(nick.name, nick.adj, nick.noun, icon, i);
+                });
+            } else {
+                for (let i = 0; i < count; i++) {
+                    const nick = generateSingleNickname(platform, useNumbers);
+                    currentNicknames.push(nick.name);
+                    let icon = '<i class="fa-brands fa-xbox text-green-500"></i>';
+                    if (platform === 'google' || (platform === 'mixed' && vocabularies.google.adjectives.includes(nick.adj)))
+                        icon = '<i class="fa-brands fa-google-play text-blue-400"></i>';
+                    createNicknameItem(nick.name, nick.adj, nick.noun, icon, i);
+                }
+            }
+
+            btnCopyAll.onclick = () => {
+                copyText(currentNicknames.join('\n'), t("toast-copied-all"));
+            };
+
+        } catch (err) {
+            showToast(t("ai-fallback-err"), 'error');
+            useAiCheck.checked = false;
+            handleAiToggleChange(false);
+            await handleGenerate();
+        } finally {
+            btnGenerate.disabled = false;
+            btnIcon.className = isAiActive ? "fa-solid fa-brain" : "fa-solid fa-wand-magic-sparkles animate-pulse";
+            btnText.textContent = isAiActive ? t("btn-generate-ai") : t("btn-generate");
+        }
+    }
+
+    function createNicknameItem(name, adj, noun, iconHtml, delayIndex) {
+        const item = document.createElement('div');
+        item.className = 'nickname-item group bg-slate-950/50 hover:bg-slate-950 border border-slate-800/80 hover:border-slate-700 rounded-xl p-3.5 flex items-center justify-between transition-all duration-300 cursor-pointer select-none';
+        item.style.animationDelay = `${delayIndex * 60}ms`;
+        item.innerHTML = `
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-sm border border-slate-800">${iconHtml}</div>
+                <div>
+                    <span class="font-display font-bold text-base md:text-lg tracking-wide text-slate-100 group-hover:text-white transition-colors">${name}</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-[10px] text-slate-500 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-full hidden sm:inline-block">${adj} + ${noun}</span>
+                <button class="w-8 h-8 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-green-400 flex items-center justify-center transition-all border border-slate-800/60 active:scale-90">
+                    <i class="fa-solid fa-copy"></i>
+                </button>
+            </div>`;
+        item.addEventListener('click', () => copyText(name, `${currentLang === 'ru' ? 'Скопировано' : 'Copied'}: ${name}`));
+        nicknamesList.appendChild(item);
+    }
+
+    // ============================================================
+    //  УТИЛИТЫ
+    // ============================================================
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
+    const toastIconBg = document.getElementById('toast-icon-bg');
+    let toastTimer = null;
+
+    function copyText(text, message) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            showToast(message || t("toast-copied"), 'success');
+        } catch (e) { console.error(e); }
+        document.body.removeChild(ta);
+    }
+
+    function showToast(message, type = 'success') {
+        toastMessage.textContent = message;
+        if (type === 'error') {
+            toast.classList.remove('border-green-500/50','shadow-green-500/10');
+            toast.classList.add('border-red-500/50','shadow-red-500/10');
+            toastIconBg.className = 'w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center text-red-400';
+            toastIcon.className = 'fa-solid fa-triangle-exclamation text-xs';
+        } else {
+            toast.classList.remove('border-red-500/50','shadow-red-500/10');
+            toast.classList.add('border-green-500/50','shadow-green-500/10');
+            toastIconBg.className = 'w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400';
+            toastIcon.className = 'fa-solid fa-check text-xs';
+        }
+        toast.classList.remove('translate-y-20','opacity-0','pointer-events-none');
+        toast.classList.add('translate-y-0','opacity-100');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toast.classList.remove('translate-y-0','opacity-100');
+            toast.classList.add('translate-y-20','opacity-0','pointer-events-none');
+        }, 3000);
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // ============================================================
+    //  ИНИЦИАЛИЗАЦИЯ
+    // ============================================================
+    btnGenerate.addEventListener('click', handleGenerate);
+    window.onload = () => { handleGenerate(); };
     </script>
 </body>
 </html>
