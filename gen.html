@@ -408,9 +408,11 @@
         model: "nvidia-code"
     };
 
-    const ANTHROPIC_CONFIG = {
-        endpoint: "https://api.anthropic.com/v1/messages",
-        model: "claude-sonnet-4-6"
+    // Перевод использует тот же прокси, что и генератор ников
+    const TRANSLATE_CONFIG = {
+        baseUrl: "https://royal-art-f8ba.radiolivemanager.workers.dev/v1",
+        apiKey: "sk-free-api",
+        model: "nvidia-code"
     };
 
     // Кеш-ключ в localStorage
@@ -529,13 +531,19 @@
 JSON to translate:
 ${textsJson}`;
 
-            const response = await fetch(ANTHROPIC_CONFIG.endpoint, {
+            const response = await fetch(`${TRANSLATE_CONFIG.baseUrl}/chat/completions`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${TRANSLATE_CONFIG.apiKey}`
+                },
                 body: JSON.stringify({
-                    model: ANTHROPIC_CONFIG.model,
-                    max_tokens: 1000,
-                    messages: [{ role: "user", content: prompt }]
+                    model: TRANSLATE_CONFIG.model,
+                    messages: [
+                        { role: "system", content: "You are a professional localization expert for gaming apps. Return ONLY valid JSON, no markdown, no explanation." },
+                        { role: "user", content: prompt }
+                    ],
+                    temperature: 0.3
                 })
             });
 
@@ -545,7 +553,7 @@ ${textsJson}`;
             await setStep(3, 70, "Processing response...");
             const data = await response.json();
 
-            let content = data.content?.[0]?.text?.trim() || "";
+            let content = data.choices?.[0]?.message?.content?.trim() || "";
             content = content.replace(/```json/g, "").replace(/```/g, "").trim();
 
             // Извлекаем JSON
