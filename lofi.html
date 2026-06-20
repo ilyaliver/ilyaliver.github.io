@@ -740,6 +740,27 @@ let currentIdx = -1;
 let isPlaying  = false;
 
 // ═══════════════════════════════════════════════════════
+//  PERSISTENCE (localStorage)
+// ═══════════════════════════════════════════════════════
+const STORAGE_KEY = 'lofi_radio_state_v1';
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      idx: currentIdx,
+      volume: volSlider.value
+    }));
+  } catch (e) { /* localStorage may be disabled */ }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+// ═══════════════════════════════════════════════════════
 //  ELEMENTS
 // ═══════════════════════════════════════════════════════
 const audio      = document.getElementById('audioEl');
@@ -819,6 +840,37 @@ function escHtml(str) {
 renderStations(filteredStations);
 
 // ═══════════════════════════════════════════════════════
+//  RESTORE LAST SESSION
+// ═══════════════════════════════════════════════════════
+(function restoreSession() {
+  const s = loadState();
+  if (!s) return;
+
+  // restore volume
+  if (typeof s.volume === 'number') {
+    const v = Math.max(0, Math.min(100, s.volume));
+    volSlider.value = v;
+    volVal.textContent = v;
+  }
+
+  // restore last station (no autoplay — browser policy)
+  if (typeof s.idx === 'number' && s.idx >= 0 && s.idx < stations.length) {
+    currentIdx = s.idx;
+    const st = stations[s.idx];
+    stName.textContent = st.name;
+    stSub.textContent = 'последняя станция — нажмите ▶';
+    statusLbl.textContent = 'ГОТОВО';
+    updateCards();
+
+    // scroll active card into view
+    requestAnimationFrame(() => {
+      const active = grid.querySelector('.station-card.active');
+      if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+})();
+
+// ═══════════════════════════════════════════════════════
 //  SELECT STATION
 // ═══════════════════════════════════════════════════════
 function selectStation(idx) {
@@ -827,6 +879,7 @@ function selectStation(idx) {
   const st = stations[idx];
   stName.textContent = st.name;
   stSub.textContent = 'подключение…';
+  saveState();
   playAudio(st.url);
   updateCards();
 }
@@ -942,6 +995,7 @@ function updateCards() {
 volSlider.addEventListener('input', () => {
   audio.volume = volSlider.value / 100;
   volVal.textContent = volSlider.value;
+  saveState();
 });
 
 // ═══════════════════════════════════════════════════════
