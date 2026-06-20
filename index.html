@@ -83,8 +83,8 @@
 
                 const data = await response.json();
 
-                // 2. Фильтруем только HTML файлы в корне
-                const htmlFiles = data.filter(item => item.type === 'file' && item.name.endsWith('.html'));
+                // 2. Фильтруем только HTML файлы в корне, исключая сам index.html
+                const htmlFiles = data.filter(item => item.type === 'file' && item.name.endsWith('.html') && item.name !== 'index.html');
 
                 if (htmlFiles.length === 0) {
                     loadingEl.innerHTML = '<p class="text-gray-600">В корневом каталоге репозитория не найдено HTML файлов.</p>';
