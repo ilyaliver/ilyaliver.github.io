@@ -4,51 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Карта сайта ilyaliver.github.io</title>
-    <!-- Подключаем Tailwind CSS для красивого оформления -->
+    <!-- Подключаем Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Настраиваем Tailwind для работы с темной темой по классу -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- Скрипт предотвращения "мигания" белого фона при загрузке темной темы -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
 </head>
-<body class="bg-gray-100 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+<body class="bg-gray-100 dark:bg-gray-950 min-h-screen py-10 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
     
-    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="px-6 py-8 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+    <div class="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-800 transition-colors duration-200">
+        <!-- Шапка (Header) -->
+        <div class="px-6 py-8 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50 transition-colors duration-200">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Страницы репозитория</h1>
-                <p class="text-sm text-gray-500 mt-1">Автоматический парсинг HTML файлов из ilyaliver.github.io</p>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Страницы репозитория</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Автоматический парсинг HTML файлов из ilyaliver.github.io</p>
             </div>
-            <a href="https://github.com/ilyaliver/ilyaliver.github.io" target="_blank" class="text-gray-500 hover:text-gray-900">
-                <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
-                </svg>
-            </a>
+            <div class="flex items-center gap-4">
+                <!-- Кнопка переключения темной темы -->
+                <button id="theme-toggle" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none rounded-lg text-sm p-2.5 transition-colors">
+                    <!-- Иконка Солнца (для темной темы) -->
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464a1 1 0 10-1.414-1.414l.707.707a1 1 0 101.414-1.414l-.707-.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+                    </svg>
+                    <!-- Иконка Луны (для светлой темы) -->
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                </button>
+
+                <!-- Ссылка на GitHub -->
+                <a href="https://github.com/ilyaliver/ilyaliver.github.io" target="_blank" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
+                    </svg>
+                </a>
+            </div>
         </div>
 
         <!-- Индикатор загрузки -->
-        <div id="loading" class="p-12 text-center">
+        <div id="loading" class="p-12 text-center transition-colors">
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-4"></div>
-            <p class="text-gray-600 font-medium">Получаем данные из GitHub...</p>
-            <p class="text-sm text-gray-400 mt-2">Это может занять несколько секунд, так как мы читаем код каждого файла.</p>
+            <p class="text-gray-600 dark:text-gray-300 font-medium">Получаем данные из GitHub...</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">Это может занять несколько секунд, так как мы читаем код каждого файла.</p>
         </div>
 
         <!-- Сообщение об ошибке -->
-        <div id="error" class="hidden p-6 bg-red-50 border-l-4 border-red-500 text-red-700 m-6 rounded">
+        <div id="error" class="hidden p-6 bg-red-50 dark:bg-red-950/40 border-l-4 border-red-500 text-red-700 dark:text-red-400 m-6 rounded">
             <p class="font-bold">Ошибка!</p>
             <p id="error-message"></p>
         </div>
 
         <!-- Таблица результатов -->
-        <div class="overflow-x-auto hidden" id="table-container">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <div class="overflow-x-auto hidden border-t border-gray-100 dark:border-gray-800" id="table-container">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                <thead class="bg-gray-50 dark:bg-gray-900/30">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/2">
                             Ссылка на страницу
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/2">
                             Заголовок (тег &lt;title&gt;)
                         </th>
                     </tr>
                 </thead>
-                <tbody id="table-body" class="bg-white divide-y divide-gray-200">
+                <tbody id="table-body" class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
                     <!-- Строки таблицы будут добавлены сюда через JavaScript -->
                 </tbody>
             </table>
@@ -56,6 +86,35 @@
     </div>
 
     <script>
+        // Инициализация работы переключателя темы
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+        // Меняем иконку кнопки в зависимости от текущей темы
+        if (document.documentElement.classList.contains('dark')) {
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+
+        const themeToggleBtn = document.getElementById('theme-toggle');
+
+        themeToggleBtn.addEventListener('click', function() {
+            // Переключаем иконки
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
+
+            // Переключаем класс dark на теге <html> и обновляем localStorage
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Основной скрипт парсинга страниц
         document.addEventListener('DOMContentLoaded', async () => {
             const repoOwner = 'ilyaliver';
             const repoName = 'ilyaliver.github.io';
@@ -87,12 +146,11 @@
                 const htmlFiles = data.filter(item => item.type === 'file' && item.name.endsWith('.html') && item.name !== 'index.html');
 
                 if (htmlFiles.length === 0) {
-                    loadingEl.innerHTML = '<p class="text-gray-600">В корневом каталоге репозитория не найдено HTML файлов.</p>';
+                    loadingEl.innerHTML = '<p class="text-gray-600 dark:text-gray-300">В корневом каталоге репозитория не найдено HTML файлов.</p>';
                     return;
                 }
 
                 // 3. Скачиваем содержимое каждого HTML файла, чтобы найти <title>
-                // Используем Promise.all для параллельной загрузки
                 const rowPromises = htmlFiles.map(async (file) => {
                     let pageTitle = '';
                     
@@ -102,13 +160,12 @@
                             const htmlText = await fileRes.text();
                             
                             // Используем регулярное выражение для поиска тега <title>
-                            // Это безопаснее и быстрее, чем парсить весь DOM (не вызывает загрузку картинок/скриптов из того HTML)
                             const titleMatch = htmlText.match(/<title[^>]*>([^<]+)<\/title>/i);
                             
                             if (titleMatch && titleMatch[1] && titleMatch[1].trim() !== '') {
                                 pageTitle = titleMatch[1].trim();
                             } else {
-                                pageTitle = `<span class="text-gray-400 italic">Без заголовка (файл: ${file.name})</span>`;
+                                pageTitle = `<span class="text-gray-400 dark:text-gray-500 italic">Без заголовка (файл: ${file.name})</span>`;
                             }
                         } else {
                             pageTitle = `<span class="text-red-400 italic">Не удалось прочитать файл</span>`;
@@ -121,16 +178,16 @@
                     const displayUrl = `${repoOwner}.github.io/${file.path}`;
                     const actualUrl = `${pagesBaseUrl}${file.path}`;
 
-                    // Возвращаем HTML строку для строки таблицы
+                    // Возвращаем HTML строку для строки таблицы с учетом темных стилей
                     return `
-                        <tr class="hover:bg-blue-50 transition-colors duration-150">
+                        <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-800/40 transition-colors duration-150">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="${actualUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-900 hover:underline flex items-center">
+                                <a href="${actualUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:text-blue-950 dark:hover:text-blue-300 hover:underline inline-flex items-center">
                                     ${displayUrl}
                                     <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                 </a>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-700">
+                            <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                 ${pageTitle}
                             </td>
                         </tr>
