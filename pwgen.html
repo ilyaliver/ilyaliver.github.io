@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Генератор Паролей (pwgen)</title>
+    <!-- Подключаем Tailwind CSS для стилей -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Кастомные стили для скроллбара и анимаций */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .progress-bar-anim {
+            animation: progress 1.5s ease-in-out infinite;
+            transform-origin: left;
+        }
+
+        @keyframes progress {
+            0% { transform: scaleX(0); opacity: 1; }
+            50% { transform: scaleX(1); opacity: 0.5; }
+            100% { transform: scaleX(0); opacity: 1; transform-origin: right; }
+        }
+
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-200 font-mono p-4 flex items-center justify-center">
+
+    <div class="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Левая панель: Настройки -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl flex flex-col">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800">
+                <!-- SVG Icon: Terminal -->
+                <svg class="text-emerald-400 w-8 h-8" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                <div>
+                    <h1 class="text-xl font-bold text-white tracking-tight">AI pwgen GUI</h1>
+                    <p class="text-xs text-slate-500">Model: nvidia-code</p>
+                </div>
+            </div>
+
+            <div class="space-y-6 flex-grow">
+                <!-- Длина и количество -->
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm text-slate-400">Длина пароля (<span id="val-length" class="text-emerald-400">16</span>)</label>
+                        </div>
+                        <input type="range" id="opt-length" min="4" max="64" value="16" class="w-full accent-emerald-500 bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer" oninput="updateUI()">
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm text-slate-400">Количество (<span id="val-count" class="text-emerald-400">3</span>)</label>
+                        </div>
+                        <input type="range" id="opt-count" min="1" max="20" value="3" class="w-full accent-emerald-500 bg-slate-800 rounded-lg appearance-none h-2 cursor-pointer" oninput="updateUI()">
+                    </div>
+                </div>
+
+                <!-- Тумблеры (CSS only switch using Tailwind Peer) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="toggles-container">
+                    <!-- Генерируются через JS для чистоты HTML -->
+                </div>
+
+                <!-- Исключить символы -->
+                <div>
+                    <label class="text-sm text-slate-400 block mb-1">Исключить символы (-r)</label>
+                    <input type="text" id="opt-r" placeholder="Например: !@#$" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 transition-colors" oninput="updateUI()">
+                </div>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-slate-800">
+                <div id="command-preview" class="bg-slate-950 p-3 rounded-lg border border-slate-800 mb-4 font-mono text-xs overflow-x-auto text-emerald-400 flex items-center gap-2">
+                    <!-- Command will appear here -->
+                </div>
+                
+                <button id="generate-btn" onclick="generatePasswords()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg id="btn-icon" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    <span id="btn-text">ГЕНЕРИРОВАТЬ НЕЙРОСЕТЬЮ</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Правая панель: Результат -->
+        <div class="bg-black/40 border border-slate-800 rounded-xl p-6 shadow-2xl flex flex-col relative overflow-hidden h-[600px] lg:h-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-slate-300 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    Вывод терминала ИИ
+                </h2>
+                <button id="copy-btn" onclick="copyResult()" class="hidden text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1 text-sm bg-slate-800 px-3 py-1 rounded-md">
+                    <svg id="copy-icon" class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span id="copy-text">Копировать</span>
+                </button>
+            </div>
+
+            <div id="output-area" class="flex-grow bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-y-auto relative">
+                
+                <!-- Состояние по умолчанию -->
+                <div id="state-idle" class="h-full flex flex-col items-center justify-center text-slate-600">
+                    <svg class="w-16 h-16 mb-4 opacity-20" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <p>Ожидание команды...</p>
+                    <p class="text-xs mt-2 max-w-xs text-center opacity-50">Настройте параметры слева и запустите генерацию.</p>
+                </div>
+
+                <!-- Состояние загрузки (скрыто по умолчанию) -->
+                <div id="state-loading" class="hidden h-full flex flex-col items-center justify-center text-emerald-500 space-y-4">
+                    <svg class="w-12 h-12 animate-pulse-fast" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    <div class="text-center w-full">
+                        <p id="loading-text" class="animate-pulse-fast text-sm font-semibold">Инициализация...</p>
+                        <div class="mt-4 w-3/4 mx-auto h-1 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 w-full progress-bar-anim"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Состояние результата (скрыто по умолчанию) -->
+                <div id="state-result" class="hidden text-slate-300 whitespace-pre-wrap break-words">
+                </div>
+
+                <!-- Состояние ошибки (скрыто по умолчанию) -->
+                <div id="state-error" class="hidden text-red-400 flex items-start gap-2">
+                    <svg class="w-6 h-6 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <div>
+                        <p class="font-bold">SYSTEM ERROR</p>
+                        <p id="error-text" class="text-xs mt-1 text-red-300"></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ОСНОВНОЙ СКРИПТ ПРИЛОЖЕНИЯ -->
+    <script>
+        // === КОНФИГУРАЦИЯ ИИ ===
+        const AI_CONFIG = {
+            baseUrl: "https://royal-art-f8ba.radiolivemanager.workers.dev/v1",
+            apiKey: "sk-free-api",
+            model: "nvidia-code"
+        };
+
+        const SYSTEM_PROMPT = `# SYSTEM PROMPT: pwgen CLI Simulator
+
+## [CONTEXT]
+Ты — продвинутый Linux-терминал и эксперт по кибербезопасности. Твоя задача — точная симуляция работы классической утилиты \`pwgen\` (автор: Theodore Ts'o) с расширенной поддержкой локализации. 
+
+## [TASK]
+Анализируй пользовательский ввод. Если пользователь вводит команду \`pwgen\` с аргументами, генерируй пароли в строгом соответствии с правилами утилиты. Если пользователь просит справку, предоставляй документацию.
+
+## [CONSTRAINTS]
+* **MUST**: По умолчанию генерировать пароли длиной 8 символов (если аргумент \`pw_length\` не указан).
+* **MUST**: Если флаг \`-1\` не указан, симулировать интерактивный режим (TTY) и выводить пароли сеткой в несколько столбцов.
+* **MUST**: Возвращать результат генерации исключительно внутри блока кода \`text\` без лишних вступительных слов.
+* **MUST**: Добавлять после блока кода короткое предупреждение о безопасности, если пользователь генерирует пароль БЕЗ флага \`-s\` для защищенных систем (offline-брутфорс риск).
+* **MUST**: Применять выбранный язык (через флаг \`--lang\`) для всех текстовых сообщений, предупреждений и вывода справки. По умолчанию использовать русский.
+* **MUST NOT**: Включать исключенные символы, если передан флаг \`-r\`.
+* **MUST NOT**: Использовать гласные при флаге \`-v\` или неоднозначные символы (l, 1, 0, O) при флаге \`-B\`.
+
+## [KNOWLEDGE BASE: Синтаксис и Флаги]
+Синтаксис: \`pwgen [ОПЦИИ] [pw_length] [num_pw]\`
+
+| Опция | Длинная опция | Описание |
+| :--- | :--- | :--- |
+| \`-n\` | \`--numerals\` | Включить цифры (вкл. по умолчанию в TTY) |
+| \`-0\` | \`--no-numerals\` | Исключить цифры |
+| \`-c\` | \`--capitalize\` | Включить заглавные буквы (вкл. по умолчанию в TTY) |
+| \`-A\` | \`--no-capitalize\` | Исключить заглавные буквы |
+| \`-y\` | \`--symbols\` | Включить спецсимволы (!, @, # и др.) |
+| \`-v\` | \`--no-vowels\` | Исключить гласные буквы |
+| \`-s\` | \`--secure\` | Полностью случайный пароль (высокая энтропия) |
+| \`-B\` | \`--ambiguous\` | Исключить схожие символы (l, 1, 0, O) |
+| \`-1\` | | Выводить строго по одному паролю на строку |
+| \`-C\` | | Выводить в колонки (по умолчанию в TTY) |
+| \`-N\` | \`--num-passwords=N\` | Задать количество (альтернатива num_pw) |
+| \`-r\` | \`--remove-chars=STR\`| Исключить конкретные символы (напр. \`-r "$%^"\`) |
+| | \`--lang=[ru\\|en]\`| Установить язык интерфейса, предупреждений и справки |
+
+## [OUTPUT FORMAT]
+1. Строгий блок кода с результатом выполнения команды.
+2. [Опционально] Блок "⚠️ Внимание:" (или "⚠️ Warning:" при \`--lang=en\`), если пароль сгенерирован без \`-s\` или использован \`-B\` (усечение алфавита).`;
+
+        // Данные тумблеров
+        const togglesData = [
+            { id: 'opt-n', label: 'Цифры (-n)', default: true },
+            { id: 'opt-c', label: 'Заглавные (-c)', default: true },
+            { id: 'opt-y', label: 'Спецсимволы (-y)', default: true },
+            { id: 'opt-s', label: 'Secure (-s)', default: true, highlight: true },
+            { id: 'opt-B', label: 'Без похожих (-B)', default: true },
+            { id: 'opt-v', label: 'Без гласных (-v)', default: false },
+            { id: 'opt-1', label: 'Один на строку (-1)', default: true }
+        ];
+
+        // Генерируем HTML для тумблеров
+        const togglesContainer = document.getElementById('toggles-container');
+        togglesData.forEach(t => {
+            const highlightClass = t.highlight ? 'peer-checked:bg-emerald-600' : 'peer-checked:bg-indigo-600';
+            const textHighlight = t.highlight ? 'peer-checked:text-emerald-400 peer-checked:font-medium' : '';
+            
+            const html = `
+                <label class="flex items-center justify-between cursor-pointer group bg-slate-950/50 p-2 rounded border border-slate-800 hover:border-slate-700 transition-colors">
+                    <span class="text-sm text-slate-300 select-none peer-class-target ${textHighlight}">${t.label}</span>
+                    <div class="relative">
+                        <input type="checkbox" id="${t.id}" class="sr-only peer" ${t.default ? 'checked' : ''} onchange="updateUI()">
+                        <div class="block w-10 h-6 rounded-full bg-slate-700 transition-colors ${highlightClass}"></div>
+                        <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4"></div>
+                    </div>
+                </label>
+            `;
+            togglesContainer.insertAdjacentHTML('beforeend', html);
+        });
+
+        // Глобальная переменная для хранения чистого результата для копирования
+        let currentRawOutput = "";
+        let loadingInterval;
+
+        // Обновление UI (счетчики и строка команды)
+        function updateUI() {
+            const length = document.getElementById('opt-length').value;
+            const count = document.getElementById('opt-count').value;
+            
+            document.getElementById('val-length').innerText = length;
+            document.getElementById('val-count').innerText = count;
+
+            // Сборка команды
+            let cmd = "pwgen ";
+            cmd += document.getElementById('opt-n').checked ? "-n " : "-0 ";
+            cmd += document.getElementById('opt-c').checked ? "-c " : "-A ";
+            if (document.getElementById('opt-y').checked) cmd += "-y ";
+            if (document.getElementById('opt-v').checked) cmd += "-v ";
+            if (document.getElementById('opt-s').checked) cmd += "-s ";
+            if (document.getElementById('opt-B').checked) cmd += "-B ";
+            cmd += document.getElementById('opt-1').checked ? "-1 " : "-C ";
+
+            const removeChars = document.getElementById('opt-r').value;
+            if (removeChars) cmd += `-r "${removeChars}" `;
+
+            cmd += `--lang=ru ${length} ${count}`;
+            
+            // Убираем лишние пробелы
+            cmd = cmd.replace(/\s+/g, ' ').trim();
+            
+            document.getElementById('command-preview').innerHTML = `<span class="text-slate-500 select-none">$</span> ${cmd}`;
+            return cmd;
+        }
+
+        // Управление состояниями экранов
+        function showState(state) {
+            ['state-idle', 'state-loading', 'state-result', 'state-error'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(state).classList.remove('hidden');
+        }
+
+        // Анимация текста при загрузке
+        function startLoadingText() {
+            const phrases = [
+                "Инициализация терминала...",
+                "Парсинг аргументов pwgen...",
+                "Генерация криптографической энтропии...",
+                "Исключение слабых символов...",
+                "Применение политик безопасности...",
+                "Ожидание ответа модели nvidia-code..."
+            ];
+            let i = 0;
+            const textEl = document.getElementById('loading-text');
+            textEl.innerText = phrases[0];
+            loadingInterval = setInterval(() => {
+                i = (i + 1) % phrases.length;
+                textEl.innerText = phrases[i];
+            }, 1200);
+        }
+
+        function stopLoadingText() {
+            clearInterval(loadingInterval);
+        }
+
+        // Парсинг Markdown от ИИ (очень базовый для блоков кода)
+        function formatAIResponse(text) {
+            const parts = text.split('```');
+            let formattedHTML = '';
+            
+            for (let i = 0; i < parts.length; i++) {
+                if (i % 2 !== 0) {
+                    // Это блок кода
+                    let codeContent = parts[i].replace(/^text\n/, '').replace(/^\n/, '');
+                    formattedHTML += `<div class="bg-slate-900 text-emerald-400 p-3 rounded my-2 border border-slate-800 overflow-x-auto">${codeContent}</div>`;
+                } else {
+                    // Обычный текст (предупреждения)
+                    if (parts[i].trim() !== '') {
+                        formattedHTML += `<span class="text-amber-400/90 inline-block my-2">${parts[i]}</span>`;
+                    }
+                }
+            }
+            return formattedHTML || text;
+        }
+
+        // Основная функция запроса
+        async function generatePasswords() {
+            const command = updateUI();
+            const btn = document.getElementById('generate-btn');
+            const btnIcon = document.getElementById('btn-icon');
+            const btnText = document.getElementById('btn-text');
+            const copyBtn = document.getElementById('copy-btn');
+
+            // Установка UI в режим загрузки
+            btn.disabled = true;
+            btnText.innerText = 'ИИ ГЕНЕРИРУЕТ...';
+            // Иконка загрузки (кружок)
+            btnIcon.innerHTML = `<circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10" class="animate-spin"></path>`;
+            copyBtn.classList.add('hidden');
+            currentRawOutput = "";
+
+            showState('state-loading');
+            startLoadingText();
+
+            try {
+                const response = await fetch(`${AI_CONFIG.baseUrl}/chat/completions`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${AI_CONFIG.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: AI_CONFIG.model,
+                        messages: [
+                            { role: "system", content: SYSTEM_PROMPT },
+                            { role: "user", content: command }
+                        ],
+                        temperature: 0.7 
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Ошибка API: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const aiText = data.choices[0]?.message?.content;
+                
+                if (!aiText) throw new Error("Модель вернула пустой ответ.");
+
+                // Сохраняем для копирования (извлекаем текст из маркдауна)
+                currentRawOutput = aiText;
+                // Экранируем обратные кавычки для корректного парсинга
+                const match = currentRawOutput.match(/\`\`\`(?:text)?\n([\s\S]*?)\`\`\`/);
+                if (match) {
+                    currentRawOutput = match[1].trim();
+                }
+
+                // Отображаем
+                document.getElementById('state-result').innerHTML = formatAIResponse(aiText);
+                showState('state-result');
+                copyBtn.classList.remove('hidden');
+
+            } catch (err) {
+                document.getElementById('error-text').innerText = err.message;
+                showState('state-error');
+            } finally {
+                // Возврат кнопки в исходное состояние
+                stopLoadingText();
+                btn.disabled = false;
+                btnText.innerText = 'ГЕНЕРИРОВАТЬ НЕЙРОСЕТЬЮ';
+                btnIcon.innerHTML = `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>`;
+            }
+        }
+
+        // Копирование в буфер
+        function copyResult() {
+            if (!currentRawOutput) return;
+
+            // Fallback для старых браузеров или iframe
+            const textArea = document.createElement("textarea");
+            textArea.value = currentRawOutput;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                
+                // Анимация кнопки копирования
+                const copyText = document.getElementById('copy-text');
+                const copyIcon = document.getElementById('copy-icon');
+                
+                copyText.innerText = 'Скопировано';
+                copyText.classList.replace('text-slate-400', 'text-emerald-400');
+                // Иконка галочки
+                copyIcon.innerHTML = `<polyline points="20 6 9 17 4 12"></polyline>`;
+                copyIcon.classList.add('text-emerald-400');
+
+                setTimeout(() => {
+                    copyText.innerText = 'Копировать';
+                    copyText.classList.replace('text-emerald-400', 'text-slate-400');
+                    // Иконка копирования
+                    copyIcon.innerHTML = `<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>`;
+                    copyIcon.classList.remove('text-emerald-400');
+                }, 2000);
+            } catch (err) {
+                console.error('Ошибка копирования', err);
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // Инициализация UI при загрузке
+        updateUI();
+
+    </script>
+</body>
+</html>
