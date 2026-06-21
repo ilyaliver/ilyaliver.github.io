@@ -52,6 +52,11 @@
             </div>
         </div>
 
+        <!-- Баннер ограничения запросов (Rate Limit) -->
+        <div id="rate-limit-notice" class="hidden p-4 bg-yellow-50 dark:bg-yellow-900/30 border-b border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300 text-sm">
+            <p>Лимит запросов к GitHub исчерпан. Отображаются данные из кэша. Ограничение снимется: <span id="reset-time" class="font-bold"></span></p>
+        </div>
+
         <!-- Индикатор загрузки -->
         <div id="loading" class="p-12 text-center transition-colors">
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-4"></div>
@@ -90,7 +95,6 @@
         const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
         const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
 
-        // Меняем иконку кнопки в зависимости от текущей темы
         if (document.documentElement.classList.contains('dark')) {
             themeToggleLightIcon.classList.remove('hidden');
         } else {
@@ -100,11 +104,9 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
 
         themeToggleBtn.addEventListener('click', function() {
-            // Переключаем иконки
             themeToggleDarkIcon.classList.toggle('hidden');
             themeToggleLightIcon.classList.toggle('hidden');
 
-            // Переключаем класс dark на теге <html> и обновляем localStorage
             if (document.documentElement.classList.contains('dark')) {
                 document.documentElement.classList.remove('dark');
                 localStorage.setItem('theme', 'light');
@@ -114,7 +116,7 @@
             }
         });
 
-        // Основной скрипт парсинга страниц
+        // Основной скрипт парсинга страниц с кэшированием
         document.addEventListener('DOMContentLoaded', async () => {
             const repoOwner = 'ilyaliver';
             const repoName = 'ilyaliver.github.io';
@@ -126,23 +128,86 @@
             const tableBodyEl = document.getElementById('table-body');
             const errorEl = document.getElementById('error');
             const errorMessageEl = document.getElementById('error-message');
+            const rateLimitNoticeEl = document.getElementById('rate-limit-notice');
+            const resetTimeEl = document.getElementById('reset-time');
+
+            // Константы для работы с кэшем и лимитами
+            const CACHE_KEY = 'github_pages_cache';
+            const RATE_LIMIT_KEY = 'github_rate_limit_reset';
+
+            // Функция отрисовки таблицы
+            const renderTable = (data) => {
+                const rowsHtml = data.map(file => `
+                    <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-800/40 transition-colors duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="${file.url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:text-blue-950 dark:hover:text-blue-300 hover:underline inline-flex items-center">
+                                ${repoOwner}.github.io/${file.name}
+                                <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                            ${file.title}
+                        </td>
+                    </tr>
+                `).join('');
+
+                tableBodyEl.innerHTML = rowsHtml;
+                loadingEl.classList.add('hidden');
+                tableContainerEl.classList.remove('hidden');
+            };
 
             try {
-                // 1. Получаем список файлов в корне репозитория
+                // 1. Проверяем лимиты в localStorage
+                const rateLimitReset = localStorage.getItem(RATE_LIMIT_KEY);
+                const now = Math.floor(Date.now() / 1000);
+                const cachedData = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
+
+                // Если лимит все еще действует
+                if (rateLimitReset && now < parseInt(rateLimitReset)) {
+                    if (cachedData.length > 0) {
+                        const resetDate = new Date(parseInt(rateLimitReset) * 1000);
+                        resetTimeEl.textContent = resetDate.toLocaleTimeString('ru-RU');
+                        rateLimitNoticeEl.classList.remove('hidden');
+                        renderTable(cachedData);
+                        return; // Выходим, используем только кэш
+                    } else {
+                        throw new Error(`Лимит запросов к GitHub исчерпан. Обновление станет доступным после ${new Date(parseInt(rateLimitReset) * 1000).toLocaleTimeString('ru-RU')}`);
+                    }
+                } else if (rateLimitReset && now >= parseInt(rateLimitReset)) {
+                    // Лимит истек, очищаем запись
+                    localStorage.removeItem(RATE_LIMIT_KEY);
+                }
+
+                // 2. Получаем список файлов в корне репозитория
                 const response = await fetch(apiUrl);
                 
-                if (!response.ok) {
-                    if (response.status === 403) {
-                        throw new Error('Превышен лимит запросов к API GitHub (Rate Limit). Пожалуйста, подождите немного и обновите страницу.');
-                    } else if (response.status === 404) {
-                        throw new Error('Репозиторий не найден. Убедитесь, что ссылка верная и репозиторий публичный.');
+                // Обработка 403 ошибки (Rate Limit)
+                if (response.status === 403) {
+                    // Получаем время сброса лимита из заголовков (в секундах)
+                    const resetTimestamp = response.headers.get('X-RateLimit-Reset');
+                    if (resetTimestamp) {
+                        localStorage.setItem(RATE_LIMIT_KEY, resetTimestamp);
                     }
+
+                    if (cachedData.length > 0) {
+                        const resetDate = new Date(parseInt(resetTimestamp) * 1000);
+                        resetTimeEl.textContent = resetDate.toLocaleTimeString('ru-RU');
+                        rateLimitNoticeEl.classList.remove('hidden');
+                        renderTable(cachedData);
+                        return;
+                    } else {
+                        throw new Error('Превышен лимит запросов к API GitHub (Rate Limit). Пожалуйста, подождите до ' + (resetTimestamp ? new Date(parseInt(resetTimestamp) * 1000).toLocaleTimeString('ru-RU') : 'следующего часа') + ' и обновите страницу.');
+                    }
+                }
+
+                if (!response.ok) {
+                    if (response.status === 404) throw new Error('Репозиторий не найден. Убедитесь, что ссылка верная и репозиторий публичный.');
                     throw new Error(`Ошибка сети: ${response.status} ${response.statusText}`);
                 }
 
                 const data = await response.json();
 
-                // 2. Фильтруем только HTML файлы в корне, исключая сам index.html
+                // 3. Фильтруем только HTML файлы в корне, исключая сам index.html
                 const htmlFiles = data.filter(item => item.type === 'file' && item.name.endsWith('.html') && item.name !== 'index.html');
 
                 if (htmlFiles.length === 0) {
@@ -150,59 +215,67 @@
                     return;
                 }
 
-                // 3. Скачиваем содержимое каждого HTML файла, чтобы найти <title>
-                const rowPromises = htmlFiles.map(async (file) => {
-                    let pageTitle = '';
+                // 4. Сравниваем с кэшем по SHA, чтобы скачивать только измененные/новые файлы
+                const newCacheData = [];
+                let needsFetch = false;
+
+                for (const file of htmlFiles) {
+                    // Ищем файл в кэше по имени
+                    const cachedFile = cachedData.find(c => c.name === file.name);
                     
-                    try {
-                        const fileRes = await fetch(file.download_url);
-                        if (fileRes.ok) {
-                            const htmlText = await fileRes.text();
-                            
-                            // Используем регулярное выражение для поиска тега <title>
-                            const titleMatch = htmlText.match(/<title[^>]*>([^<]+)<\/title>/i);
-                            
-                            if (titleMatch && titleMatch[1] && titleMatch[1].trim() !== '') {
-                                pageTitle = titleMatch[1].trim();
+                    // Если файл в кэше и его SHA не изменился, берем title оттуда
+                    if (cachedFile && cachedFile.sha === file.sha) {
+                        newCacheData.push({
+                            name: file.name,
+                            sha: file.sha,
+                            url: `${pagesBaseUrl}${file.path}`,
+                            title: cachedFile.title
+                        });
+                    } else {
+                        // Файл новый или изменен - нужно скачивать
+                        needsFetch = true;
+                        try {
+                            const fileRes = await fetch(file.download_url);
+                            if (fileRes.ok) {
+                                const htmlText = await fileRes.text();
+                                const titleMatch = htmlText.match(/<title[^>]*>([^<]+)<\/title>/i);
+                                
+                                let pageTitle = '';
+                                if (titleMatch && titleMatch[1] && titleMatch[1].trim() !== '') {
+                                    pageTitle = titleMatch[1].trim();
+                                } else {
+                                    pageTitle = `<span class="text-gray-400 dark:text-gray-500 italic">Без заголовка (файл: ${file.name})</span>`;
+                                }
+
+                                newCacheData.push({
+                                    name: file.name,
+                                    sha: file.sha,
+                                    url: `${pagesBaseUrl}${file.path}`,
+                                    title: pageTitle
+                                });
                             } else {
-                                pageTitle = `<span class="text-gray-400 dark:text-gray-500 italic">Без заголовка (файл: ${file.name})</span>`;
+                                newCacheData.push({
+                                    name: file.name,
+                                    sha: file.sha,
+                                    url: `${pagesBaseUrl}${file.path}`,
+                                    title: `<span class="text-red-400 italic">Не удалось прочитать файл</span>`
+                                });
                             }
-                        } else {
-                            pageTitle = `<span class="text-red-400 italic">Не удалось прочитать файл</span>`;
+                        } catch (e) {
+                            console.error(`Ошибка при загрузке ${file.name}:`, e);
+                            newCacheData.push({
+                                name: file.name,
+                                sha: file.sha,
+                                url: `${pagesBaseUrl}${file.path}`,
+                                title: `<span class="text-red-400 italic">Ошибка сети при чтении</span>`
+                            });
                         }
-                    } catch (e) {
-                        console.error(`Ошибка при загрузке ${file.name}:`, e);
-                        pageTitle = `<span class="text-red-400 italic">Ошибка сети при чтении</span>`;
                     }
+                }
 
-                    const displayUrl = `${repoOwner}.github.io/${file.path}`;
-                    const actualUrl = `${pagesBaseUrl}${file.path}`;
-
-                    // Возвращаем HTML строку для строки таблицы с учетом темных стилей
-                    return `
-                        <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-800/40 transition-colors duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="${actualUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:text-blue-950 dark:hover:text-blue-300 hover:underline inline-flex items-center">
-                                    ${displayUrl}
-                                    <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                                </a>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                                ${pageTitle}
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                // Ждем завершения всех запросов
-                const rowsHtml = await Promise.all(rowPromises);
-
-                // 4. Отрисовываем таблицу
-                tableBodyEl.innerHTML = rowsHtml.join('');
-                
-                // Скрываем загрузку, показываем таблицу
-                loadingEl.classList.add('hidden');
-                tableContainerEl.classList.remove('hidden');
+                // 5. Сохраняем обновленный кэш и отрисовываем
+                localStorage.setItem(CACHE_KEY, JSON.stringify(newCacheData));
+                renderTable(newCacheData);
 
             } catch (error) {
                 console.error(error);
