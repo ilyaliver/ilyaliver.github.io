@@ -22,6 +22,7 @@
       --playing:   #a8f07a;
       --error:     #f07a7a;
       --tape:      #2e2e3e;
+      --fav-color: #ffc857;
     }
 
     html { scroll-behavior: smooth; }
@@ -502,6 +503,28 @@
       margin-top: 2px;
     }
 
+    /* Кнопка избранного */
+    .fav-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 16px;
+      padding: 4px;
+      margin-right: -4px;
+      flex-shrink: 0;
+      transition: color 0.2s, transform 0.15s;
+    }
+
+    .fav-btn:hover {
+      color: var(--fav-color);
+      transform: scale(1.2);
+    }
+
+    .fav-btn.active {
+      color: var(--fav-color);
+    }
+
     .card-arrow {
       color: var(--muted);
       font-size: 12px;
@@ -727,6 +750,7 @@ const stations = [
   { "name": "Rundfunkautist", "url": "https://rundfunkautist.stream.laut.fm/rundfunkautist?t302=2026-01-30_00-58-09&uuid=f01d031f-bac7-40fd-8688-579aa0ab9b63" },
   { "name": "ChillHop Radio", "url": "http://media-the.musicradio.com/ChillMP3" }
 ];
+
 // ═══════════════════════════════════════════════════════
 //  ICONS (emoji per station type)
 // ═══════════════════════════════════════════════════════
@@ -738,11 +762,38 @@ function getIcon(idx) { return icons[idx % icons.length]; }
 // ═══════════════════════════════════════════════════════
 let currentIdx = -1;
 let isPlaying  = false;
+let filteredStations = [...stations];
 
 // ═══════════════════════════════════════════════════════
 //  PERSISTENCE (localStorage)
 // ═══════════════════════════════════════════════════════
 const STORAGE_KEY = 'lofi_radio_state_v1';
+const FAV_KEY = 'lofi_radio_favorites_v1';
+
+// Загрузка избранного
+let favorites = [];
+try {
+  const rawFav = localStorage.getItem(FAV_KEY);
+  favorites = rawFav ? JSON.parse(rawFav) : [];
+} catch (e) { favorites = []; }
+
+function saveFavorites() {
+  try { localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); } catch (e) {}
+}
+
+function isFavorite(url) {
+  return favorites.includes(url);
+}
+
+function toggleFavorite(url) {
+  const idx = favorites.indexOf(url);
+  if (idx > -1) {
+    favorites.splice(idx, 1);
+  } else {
+    favorites.push(url);
+  }
+  saveFavorites();
+}
 
 function saveState() {
   try {
@@ -800,16 +851,21 @@ const toast      = document.getElementById('toast');
 })();
 
 // ═══════════════════════════════════════════════════════
-//  RENDER STATIONS
+//  RENDER STATIONS (С сортировкой избранного сверху)
 // ═══════════════════════════════════════════════════════
-let filteredStations = [...stations];
-
 function renderStations(list) {
-  grid.innerHTML = '';
-  countBadge.textContent = list.length + ' станций';
-  noResults.style.display = list.length === 0 ? 'block' : 'none';
+  // Создаем копию массива для сортировки
+  const sortedList = [...list].sort((a, b) => {
+    const aFav = isFavorite(a.url) ? 1 : 0;
+    const bFav = isFavorite(b.url) ? 1 : 0;
+    return bFav - aFav; // Избранные (1) будут выше обычных (0)
+  });
 
-  list.forEach((st, i) => {
+  grid.innerHTML = '';
+  countBadge.textContent = sortedList.length + ' станций';
+  noResults.style.display = sortedList.length === 0 ? 'block' : 'none';
+
+  sortedList.forEach((st) => {
     const origIdx = stations.indexOf(st);
     const card = document.createElement('div');
     card.className = 'station-card' + (origIdx === currentIdx ? ' active' : '');
@@ -819,14 +875,26 @@ function renderStations(list) {
       try { return new URL(st.url).hostname.replace('www.',''); } catch { return st.url.slice(0,30); }
     })();
 
+    const fav = isFavorite(st.url);
+    
     card.innerHTML = `
       <div class="card-icon">${getIcon(origIdx)}</div>
       <div class="card-body">
         <div class="card-name">${escHtml(st.name)}</div>
         <div class="card-url">${escHtml(domain)}</div>
       </div>
+      <button class="fav-btn ${fav ? 'active' : ''}" title="В избранное">${fav ? '★' : '☆'}</button>
       <span class="card-arrow">▶</span>
     `;
+
+    // Обработчик клика для кнопки избранного
+    const favBtn = card.querySelector('.fav-btn');
+    favBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // предотвращаем запуск станции
+      toggleFavorite(st.url);
+      renderStations(filteredStations); // перерисовываем список
+      showToast(fav ? '★ Удалено из избранного' : '★ Добавлено в избранное');
+    });
 
     card.addEventListener('click', () => selectStation(origIdx));
     grid.appendChild(card);
@@ -846,14 +914,15 @@ renderStations(filteredStations);
   const s = loadState();
   if (!s) return;
 
-  // restore volume
+  // Восстановление громкости и применение к аудио元素
   if (typeof s.volume === 'number') {
     const v = Math.max(0, Math.min(100, s.volume));
     volSlider.value = v;
     volVal.textContent = v;
+    audio.volume = v / 100; 
   }
 
-  // restore last station (no autoplay — browser policy)
+  // Восстановление последней станции (без авто-воспроизведения)
   if (typeof s.idx === 'number' && s.idx >= 0 && s.idx < stations.length) {
     currentIdx = s.idx;
     const st = stations[s.idx];
@@ -862,7 +931,6 @@ renderStations(filteredStations);
     statusLbl.textContent = 'ГОТОВО';
     updateCards();
 
-    // scroll active card into view
     requestAnimationFrame(() => {
       const active = grid.querySelector('.station-card.active');
       if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1028,5 +1096,5 @@ document.addEventListener('keydown', e => {
   if (e.code === 'ArrowDown') { volSlider.value = Math.max(0,   +volSlider.value - 5); volSlider.dispatchEvent(new Event('input')); }
 });
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0e9eedc789ba1aa',t:'MTc4MTk0OTY5NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
