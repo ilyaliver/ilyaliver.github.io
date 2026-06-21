@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wikimedia — Свободная энциклопедия</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Топ бар */
+        .top-bar {
+            background-color: #f6f6f6;
+            border-bottom: 1px solid #ccc;
+            padding: 8px 0;
+            font-size: 12px;
+        }
+
+        .top-bar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .top-links a {
+            color: #0645ad;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+
+        .top-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Заголовок */
+        header {
+            background-color: #fff;
+            border-bottom: 1px solid #ccc;
+            padding: 20px 0;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: #0645ad;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 30px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        .search-box button {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 8px 15px;
+            margin-left: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .search-box button:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Основная навигация */
+        .main-nav {
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #ccc;
+            padding: 0;
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: flex;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+        }
+
+        .nav-links li {
+            border-right: 1px solid #ccc;
+        }
+
+        .nav-links li:first-child {
+            border-left: 1px solid #ccc;
+        }
+
+        .nav-links a {
+            display: block;
+            padding: 10px 15px;
+            color: #0645ad;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .nav-links a:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Основной контент */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 15px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 15px;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-section h3 {
+            background-color: #e8e8e8;
+            padding: 8px;
+            margin: -15px -15px 10px -15px;
+            padding-left: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .sidebar-section ul {
+            list-style: none;
+        }
+
+        .sidebar-section li {
+            padding: 5px 0;
+        }
+
+        .sidebar-section a {
+            color: #0645ad;
+            text-decoration: none;
+        }
+
+        .sidebar-section a:hover {
+            text-decoration: underline;
+        }
+
+        /* Основной контент */
+        .content {
+            flex: 1;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+
+        .content h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+
+        .content h2 {
+            font-size: 22px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .content h3 {
+            font-size: 16px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .content a {
+            color: #0645ad;
+            text-decoration: none;
+        }
+
+        .content a:hover {
+            text-decoration: underline;
+        }
+
+        .toc {
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin: 20px 0;
+            float: right;
+            width: 300px;
+            margin-left: 20px;
+        }
+
+        .toc h2 {
+            font-size: 14px;
+            margin: 0 0 10px 0;
+            border: none;
+            padding: 0;
+        }
+
+        .toc ol {
+            list-style-position: inside;
+        }
+
+        .toc li {
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .info-box {
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin: 20px 0 20px 20px;
+            float: right;
+            width: 280px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .info-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 15px;
+        }
+
+        /* Редакционная информация */
+        .mw-editsection {
+            float: right;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+
+        .mw-editsection a {
+            color: #0645ad;
+        }
+
+        /* Нижний колонтитул */
+        footer {
+            background-color: #f9f9f9;
+            border-top: 1px solid #ccc;
+            padding: 20px 0;
+            margin-top: 40px;
+            font-size: 12px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+            color: #666;
+        }
+
+        .footer-content a {
+            color: #0645ad;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+
+        .footer-content a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-section {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .footer-section a {
+            margin-right: 15px;
+        }
+
+        .copyright {
+            border-top: 1px solid #ccc;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Верхняя панель -->
+    <div class="top-bar">
+        <div class="top-bar-content">
+            <span>Wikimedia</span>
+            <div class="top-links">
+                <a href="#">Вход</a>
+                <a href="#">Регистрация</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Заголовок -->
+    <header>
+        <div class="header-content">
+            <a href="#" class="logo">Wiki<span>pedia</span></a>
+            <div class="search-box">
+                <input type="text" placeholder="Поиск">
+                <button>Найти</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основная навигация -->
+    <nav class="main-nav">
+        <div class="nav-content">
+            <ul class="nav-links">
+                <li><a href="#">Заглавная</a></li>
+                <li><a href="#">Случайная статья</a></li>
+                <li><a href="#">О Википедии</a></li>
+                <li><a href="#">Справка</a></li>
+                <li><a href="#">Контакты</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <div class="container">
+        <!-- Боковая панель -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>Инструменты</h3>
+                <ul>
+                    <li><a href="#">Спецстраницы</a></li>
+                    <li><a href="#">Версия для печати</a></li>
+                    <li><a href="#">История</a></li>
+                    <li><a href="#">Обсуждение</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Категории</h3>
+                <ul>
+                    <li><a href="#">История</a></li>
+                    <li><a href="#">Наука</a></li>
+                    <li><a href="#">Технология</a></li>
+                    <li><a href="#">Культура</a></li>
+                    <li><a href="#">География</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Языки</h3>
+                <ul>
+                    <li><a href="#">English</a></li>
+                    <li><a href="#">Français</a></li>
+                    <li><a href="#">Deutsch</a></li>
+                    <li><a href="#">Español</a></li>
+                    <li><a href="#">中文</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Основной контент -->
+        <article class="content">
+            <h1>Энциклопедия <span class="mw-editsection">[<a href="#">править</a>]</span></h1>
+
+            <!-- Информационная коробка -->
+            <div class="info-box">
+                <h3>Любопытный факт</h3>
+                <p>Википедия — свободная многоязычная энциклопедия, создаваемая совместно людьми со всего света.</p>
+            </div>
+
+            <p>
+                <strong>Энциклопед��я</strong> — это справочное издание, содержащее информацию обо всех или отдельных областях знания. В эпоху развития информационных технологий энциклопедии стали доступны в цифровом формате, что позволяет быстро найти нужную информацию по любому интересующему вопросу.
+            </p>
+
+            <h2>История <span class="mw-editsection">[<a href="#">править</a>]</span></h2>
+            <p>
+                Первые энциклопедии появились в Древней Греции. Греческий философ Плиний Старший составил одну из наиболее известных древних энциклопедий — "Естественную историю". Средневековые энциклопедии служили для сохранения и передачи знаний будущим поколениям.
+            </p>
+
+            <p>
+                В XVIII веке французские философы-просветители Дидро и д'Аламбер создали "Энциклопедию", которая содержала статьи многих известных мыслителей того времени и служила инструментом распространения прогрессивных идей.
+            </p>
+
+            <h2>Современные энциклопедии <span class="mw-editsection">[<a href="#">править</a>]</span></h2>
+            <p>
+                В наше время наиболее известной энциклопедией является <a href="#">Википедия</a> — свободная интернет-энциклопедия, в которой может участвовать каждый пользователь интернета. Её создание началось в 2001 году, и на данный момент она содержит миллионы статей на различных языках.
+            </p>
+
+            <h3>Преимущества интернет-энциклопедий:</h3>
+            <ul style="margin-left: 20px; margin-bottom: 15px;">
+                <li>Быстрый поиск информации</li>
+                <li>Постоянное обновление содержимого</li>
+                <li>Наличие перекрёстных ссылок</li>
+                <li>Возможность совместного редактирования</li>
+                <li>Доступность на различных языках</li>
+            </ul>
+
+            <h2>Категории знаний <span class="mw-editsection">[<a href="#">править</a>]</span></h2>
+            <p>
+                Энциклопедии обычно организуют знания по следующим основным категориям:
+            </p>
+            <ul style="margin-left: 20px; margin-bottom: 15px;">
+                <li><strong>История</strong> — события и личности прошлого</li>
+                <li><strong>Наука</strong> — физика, химия, биология, астрономия</li>
+                <li><strong>Технология</strong> — инженерия и технические достижения</li>
+                <li><strong>Культура</strong> — искусство, литература, музыка</li>
+                <li><strong>География</strong> — страны, города, природные явления</li>
+            </ul>
+
+            <h2>Примечания <span class="mw-editsection">[<a href="#">править</a>]</span></h2>
+            <ol style="margin-left: 20px;">
+                <li>Дидро, Д., д'Аламбер, Ж. Энциклопедия. — Париж, 1751.</li>
+                <li>ВWales, Jimmy. <em>The Free Encyclopedia Movement</em>. — 2001.</li>
+            </ol>
+        </article>
+    </div>
+
+    <!-- Нижний колонтитул -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <a href="#">Об этом сайте</a>
+                <a href="#">Условия использования</a>
+                <a href="#">Политика конфиденциальности</a>
+                <a href="#">Контакты</a>
+                <a href="#">Справка</a>
+            </div>
+            <div class="copyright">
+                © 2024 Wikimedia Foundation. Текст доступен под лицензией Creative Commons Attribution/Share-Alike.
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
