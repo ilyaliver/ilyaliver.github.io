@@ -78,7 +78,7 @@
       <!-- Лого / Название -->
       <div class="flex items-center gap-2 text-white drop-shadow-md">
         <span class="text-2xl md:text-3xl font-bold tracking-wide">Молитва</span>
-        <div class="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-sm font-bold opacity-80 cursor-help" title="Правила баннера">?</div>
+        <div id="btn-banner-rules" class="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-sm font-bold opacity-80 cursor-pointer hover:opacity-100 transition-opacity" title="Правила баннера">?</div>
       </div>
       
       <!-- Имитация вкладок баннеров по центру (визуально) -->
@@ -276,6 +276,25 @@
     </div>
   </div>
 
+  <!-- ОВЕРЛЕЙ ПРАВИЛ (Заглушка) -->
+  <div id="modal-rules" class="fixed inset-0 z-50 bg-[#06080c]/90 flex items-center justify-center backdrop-blur-md animate-fade-in hidden">
+    <div class="bg-[#121722] border border-[#d3bc8e]/30 rounded-2xl w-full max-w-2xl flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] mx-4">
+      <div class="bg-[#1a2130] border-b border-[#d3bc8e]/20 px-6 py-4 rounded-t-2xl">
+        <h2 class="text-lg font-bold uppercase tracking-widest text-[#ece5d8] flex items-center gap-3">
+          <span class="w-1.5 h-5 bg-[#d3bc8e] rounded-full"></span> Детали события
+        </h2>
+      </div>
+      <div class="p-6 text-slate-300 text-sm min-h-[200px] flex items-center justify-center">
+        <p class="text-slate-500 italic">Здесь будет подробное описание вероятностей и правил баннера...</p>
+      </div>
+      <div class="p-4 border-t border-[#d3bc8e]/20 flex justify-end bg-[#1a2130] rounded-b-2xl">
+        <button id="btn-close-rules" class="bg-gradient-to-r from-[#ece5d8] to-[#d3bc8e] hover:brightness-110 text-slate-900 px-10 py-2.5 rounded-full font-black uppercase tracking-widest text-xs transition-all shadow-md">
+          ОК
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ОВЕРЛЕЙ ЗАГРУЗКИ (Портал) -->
   <div id="modal-loading" class="fixed inset-0 z-50 bg-white/90 flex items-center justify-center backdrop-blur-sm hidden animate-fade-in">
     <div class="text-center">
@@ -382,6 +401,10 @@
     const modalShop = document.getElementById('modal-shop');
     const shopContent = document.getElementById('shop-content');
     const btnCloseShop = document.getElementById('btn-close-shop');
+
+    const modalRules = document.getElementById('modal-rules');
+    const btnRules = document.getElementById('btn-banner-rules');
+    const btnCloseRules = document.getElementById('btn-close-rules');
 
     const modalLoading = document.getElementById('modal-loading');
     const modalResult = document.getElementById('modal-result');
@@ -681,6 +704,9 @@
     btnShopTop.addEventListener('click', openShop);
     btnShopBottom.addEventListener('click', openShop);
     btnCloseShop.addEventListener('click', closeShop);
+    
+    btnRules.addEventListener('click', () => modalRules.classList.remove('hidden'));
+    btnCloseRules.addEventListener('click', () => modalRules.classList.add('hidden'));
     
     btnResetSave.addEventListener('click', resetProgress);
 
