@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Warp Sim - Gacha</title>
+  <title>Поиск сигнальных прыжков</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -48,7 +48,7 @@
   <header class="relative z-10 w-full px-4 py-3 md:py-4 flex justify-between items-center border-b border-white/5 bg-slate-950/40 backdrop-blur-md">
     <div class="flex items-center gap-2">
       <div class="w-1.5 h-4 md:h-5 bg-amber-400 rounded-full shadow-[0_0_8px_#fbbf24]"></div>
-      <h1 class="text-sm md:text-xl font-black uppercase tracking-widest text-[#fffbf4]">Warp Sim</h1>
+      <h1 class="text-sm md:text-xl font-black uppercase tracking-widest text-[#fffbf4]">Поиск сигнальных прыжков</h1>
     </div>
     
     <div class="flex items-center bg-[#161f2e] border border-white/10 rounded-full pr-1 pl-2 md:pl-3 py-1 shadow-inner">
@@ -164,6 +164,26 @@
     </button>
   </div>
 
+  <!-- Оверлей Магазина (Донат) -->
+  <div id="modal-shop" class="fixed inset-0 z-50 bg-[#06080c]/90 flex items-center justify-center backdrop-blur-md animate-fade-in hidden">
+    <div class="bg-[#121722] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] mx-4 relative">
+      <!-- Кнопка закрытия -->
+      <button id="btn-close-shop" class="absolute top-4 right-4 text-slate-400 hover:text-white z-10 p-2 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <!-- Заголовок -->
+      <div class="bg-slate-950/50 border-b border-white/5 px-6 py-4">
+        <h2 class="text-lg md:text-xl font-black uppercase tracking-widest text-[#fffbf4] flex items-center gap-2">
+          <span class="w-1.5 h-4 bg-amber-400 rounded-full"></span> Центр Снабжения
+        </h2>
+      </div>
+      <!-- Динамический контент магазина -->
+      <div id="shop-content" class="p-4 md:p-6 overflow-y-auto flex-1">
+        <!-- Сюда рендерятся пакеты или методы оплаты -->
+      </div>
+    </div>
+  </div>
+
   <!-- Оверлей загрузки -->
   <div id="modal-loading" class="fixed inset-0 z-50 bg-[#06080c]/80 flex items-center justify-center backdrop-blur-sm hidden">
     <div class="w-10 h-10 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin"></div>
@@ -188,6 +208,23 @@
     const PULL_COST = 160;
     const S_PITY_LIMIT = 50;
     const EX_PITY_LIMIT = 90;
+
+    // --- ДАННЫЕ МАГАЗИНА ---
+    const SHOP_PACKAGES = [
+      { id: 'pack1', amount: 60, price: 0.99, bonus: 0, name: 'Кристалл Нова' },
+      { id: 'pack2', amount: 300, price: 4.99, bonus: 30, name: 'Горсть Кристаллов' },
+      { id: 'pack3', amount: 980, price: 14.99, bonus: 110, name: 'Сумка Кристаллов' },
+      { id: 'pack4', amount: 1980, price: 29.99, bonus: 260, name: 'Кристальный Сейф' },
+      { id: 'pack5', amount: 3280, price: 49.99, bonus: 600, name: 'Запасы Корпорации' },
+      { id: 'pack6', amount: 6480, price: 99.99, bonus: 1600, name: 'Ядро Галактики' }
+    ];
+
+    const PAYMENT_METHODS = [
+      { id: 'pm1', name: 'Межзвездный Кредит', icon: '💳' },
+      { id: 'pm2', name: 'Квант-Пэй', icon: '🌌' },
+      { id: 'pm3', name: 'Астра-Кошелек', icon: '📱' },
+      { id: 'pm4', name: 'Счет Синдиката', icon: '💼' }
+    ];
 
     // --- СОСТОЯНИЕ (STATE) ---
     let crystals = 16000;
@@ -220,6 +257,12 @@
     const btnPull1 = document.getElementById('btn-pull-1');
     const btnPull10 = document.getElementById('btn-pull-10');
     const btnCheat = document.getElementById('btn-cheat');
+    
+    // Элементы магазина
+    const modalShop = document.getElementById('modal-shop');
+    const shopContent = document.getElementById('shop-content');
+    const btnCloseShop = document.getElementById('btn-close-shop');
+
     const modalLoading = document.getElementById('modal-loading');
     const modalResult = document.getElementById('modal-result');
     const resultGrid = document.getElementById('result-grid');
@@ -441,10 +484,118 @@
     btnPull1.addEventListener('click', () => handlePull(1));
     btnPull10.addEventListener('click', () => handlePull(10));
     
-    btnCheat.addEventListener('click', () => {
-      crystals += 16000;
-      updateUI();
-    });
+    // --- ЛОГИКА МАГАЗИНА ---
+    function openShop() {
+      modalShop.classList.remove('hidden');
+      renderShopGrid();
+    }
+
+    function closeShop() {
+      modalShop.classList.add('hidden');
+    }
+
+    function renderShopGrid() {
+      shopContent.innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+          ${SHOP_PACKAGES.map(pack => `
+            <div onclick="selectPackage('${pack.id}')" class="bg-[#1a2233] border border-white/10 rounded-xl p-3 md:p-5 flex flex-col items-center justify-between cursor-pointer hover:border-amber-400 hover:shadow-[0_0_15px_rgba(251,191,36,0.15)] transition-all group relative overflow-hidden aspect-[4/3]">
+              ${pack.bonus > 0 ? `<div class="absolute top-0 left-0 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-900 text-[9px] md:text-xs font-black px-2 md:px-3 py-0.5 md:py-1 rounded-br-lg shadow-md z-10">БОНУС +${pack.bonus}</div>` : ''}
+              <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-0 opacity-50 group-hover:opacity-80 transition-opacity"></div>
+              
+              <div class="z-10 mt-3 md:mt-4 flex flex-col items-center">
+                <span class="text-4xl md:text-5xl drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] group-hover:scale-110 transition-transform duration-300">✦</span>
+                <span class="text-amber-400 font-bold mt-1 md:mt-2 font-mono text-base md:text-xl">${pack.amount.toLocaleString()}</span>
+                <span class="text-slate-400 text-[8px] md:text-[10px] uppercase tracking-widest text-center mt-1 hidden sm:block">${pack.name}</span>
+              </div>
+
+              <div class="z-10 w-full mt-2 md:mt-4">
+                <div class="w-full bg-[#ece5d8] text-slate-900 font-black text-center py-1.5 md:py-2 rounded md:rounded-md text-xs md:text-sm group-hover:bg-amber-400 transition-colors shadow-inner">
+                  $${pack.price}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function selectPackage(packId) {
+      const pack = SHOP_PACKAGES.find(p => p.id === packId);
+      if (!pack) return;
+
+      shopContent.innerHTML = `
+        <div class="flex flex-col h-full max-w-xl mx-auto animate-fade-in">
+          <button onclick="renderShopGrid()" class="self-start text-[10px] md:text-xs uppercase tracking-widest font-bold text-slate-400 hover:text-white mb-6 flex items-center gap-2 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            Назад к товарам
+          </button>
+          
+          <div class="bg-[#161f2e] border border-white/5 rounded-2xl p-6 mb-8 text-center shadow-inner relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent opacity-50"></div>
+            <h3 class="text-slate-400 text-[10px] md:text-xs uppercase tracking-widest mb-3">Ордер на транзакцию</h3>
+            <div class="text-4xl md:text-5xl font-black text-white mb-3 tracking-tighter">$${pack.price}</div>
+            <div class="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-4 py-1.5 rounded-full text-amber-400 text-sm md:text-base font-mono font-bold shadow-[0_0_10px_rgba(251,191,36,0.1)]">
+              Пополнение: +${(pack.amount + pack.bonus).toLocaleString()} ✦
+            </div>
+          </div>
+
+          <h3 class="text-xs md:text-sm font-bold text-[#fffbf4] mb-4 uppercase tracking-widest flex items-center gap-2">
+            <span class="w-1 h-3 bg-indigo-500 rounded-full"></span> Метод авторизации:
+          </h3>
+          <div class="space-y-3">
+            ${PAYMENT_METHODS.map(method => `
+              <button onclick="processPayment('${pack.id}', '${method.id}')" class="w-full bg-[#1a2233] border border-white/10 hover:border-indigo-400 rounded-xl p-4 md:p-5 flex items-center justify-between group transition-all hover:shadow-[0_0_20px_rgba(99,102,241,0.1)]">
+                <div class="flex items-center gap-4">
+                  <span class="text-2xl drop-shadow-md group-hover:scale-110 transition-transform">${method.icon}</span>
+                  <span class="font-bold tracking-wide text-slate-300 group-hover:text-white text-sm md:text-base">${method.name}</span>
+                </div>
+                <span class="text-[10px] md:text-xs font-black uppercase tracking-widest bg-white/5 px-4 py-2 rounded-lg text-slate-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors">Оплатить</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function processPayment(packId, methodId) {
+      const pack = SHOP_PACKAGES.find(p => p.id === packId);
+      if (!pack) return;
+      
+      closeShop();
+      modalLoading.classList.remove('hidden');
+
+      // Имитация задержки "обработки" от банка/провайдера
+      setTimeout(() => {
+        const totalGained = pack.amount + pack.bonus;
+        crystals += totalGained;
+        updateUI();
+        modalLoading.classList.add('hidden');
+        
+        // Всплывающее красивое уведомление о покупке
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-[10%] left-1/2 -translate-x-1/2 bg-[#161f2e]/95 border border-amber-400/30 text-[#fffbf4] px-6 py-4 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-[100] animate-zoom-in flex items-center gap-4 backdrop-blur-md';
+        notification.innerHTML = `
+          <div class="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center border border-amber-400/50 text-xl shadow-[0_0_10px_rgba(251,191,36,0.3)]">✦</div>
+          <div>
+            <div class="text-[10px] uppercase tracking-widest text-amber-400 font-bold mb-0.5">Транзакция успешна</div>
+            <div class="text-sm font-mono font-bold">+ ${totalGained.toLocaleString()} Кристаллов</div>
+          </div>
+        `;
+        document.body.appendChild(notification);
+        
+        // Удаление уведомления через 3 секунды
+        setTimeout(() => {
+          notification.classList.add('opacity-0', '-translate-y-4');
+          notification.style.transition = 'all 0.5s ease-out';
+          setTimeout(() => notification.remove(), 500);
+        }, 3000);
+        
+      }, 1500); // 1.5 секунды фейковой загрузки
+    }
+
+    // Подключение кнопок магазина
+    btnCheat.addEventListener('click', openShop);
+    btnCloseShop.addEventListener('click', closeShop);
 
     btnCloseResult.addEventListener('click', () => {
       modalResult.classList.add('hidden');
