@@ -9,15 +9,26 @@
     tailwind.config = {
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+            serif: ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
+          },
           animation: {
-            'spin-slow': 'spin 3s linear infinite',
+            'spin-slow': 'spin 4s linear infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'float-delayed': 'float 6s ease-in-out 3s infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-15px)' },
+            }
           }
         }
       }
     }
   </script>
   <style>
-    /* Базовые стили для плавной анимации появления (аналог animate-in) */
     @keyframes fade-in {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -30,196 +41,263 @@
       animation: fade-in 0.3s ease-out forwards;
     }
     .animate-zoom-in {
-      animation: zoom-in-bottom 0.5s ease-out both;
+      animation: zoom-in-bottom 0.4s ease-out both;
     }
-    /* Скроллбар в стиле игры */
+    
+    /* Геометрические фигуры для фона баннера */
+    .shape-triangle {
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    }
+
+    /* Скроллбар для светлой и темной тем */
     ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0c1017; }
-    ::-webkit-scrollbar-thumb { background: #1b263b; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #fbbf24; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
+    .dark-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
   </style>
 </head>
-<body class="min-h-[100dvh] bg-[#0c1017] text-[#ece5d8] font-sans antialiased relative overflow-x-hidden selection:bg-amber-500/30 flex flex-col">
+<body class="min-h-[100dvh] bg-gradient-to-br from-[#77B5E2] via-[#A6D4E8] to-[#E6F0F2] text-slate-800 font-sans antialiased relative overflow-x-hidden selection:bg-amber-500/30 flex flex-col m-0">
 
-  <!-- Фоновые эффекты -->
-  <div class="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1b263b] via-[#0c1017] to-[#080b10] pointer-events-none z-0"></div>
+  <!-- Декоративные облака (CSS) -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-white/40 rounded-full blur-[80px]"></div>
+    <div class="absolute top-1/4 -right-20 w-[30rem] h-[30rem] bg-white/30 rounded-full blur-[100px]"></div>
+    <div class="absolute bottom-0 left-1/4 w-[40rem] h-64 bg-white/40 rounded-full blur-[100px]"></div>
+  </div>
 
-  <!-- ШАПКА -->
-  <header class="relative z-10 w-full px-4 py-3 md:py-4 flex justify-between items-center border-b border-white/5 bg-slate-950/40 backdrop-blur-md">
-    <div class="flex items-center gap-2">
-      <div class="w-1.5 h-4 md:h-5 bg-amber-400 rounded-full shadow-[0_0_8px_#fbbf24]"></div>
-      <h1 class="text-sm md:text-xl font-black uppercase tracking-widest text-[#fffbf4]">Поиск сигнальных прыжков</h1>
-    </div>
+  <!-- ВИД ГАЧИ (ОСНОВНОЙ ЭКРАН) -->
+  <div id="view-gacha" class="flex-1 flex flex-col relative z-10 animate-fade-in transition-all duration-300">
     
-    <div class="flex items-center bg-[#161f2e] border border-white/10 rounded-full pr-1 pl-2 md:pl-3 py-1 shadow-inner">
-      <span class="text-amber-400 mr-1 md:mr-2 text-xs md:text-base">✦</span>
-      <span id="ui-crystals" class="font-mono font-bold text-[#f4efe6] pr-2 md:pr-4 text-xs md:text-base">16,000</span>
-      <button id="btn-cheat" class="bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-full w-5 h-5 md:w-6 md:h-6 flex items-center justify-center font-black transition active:scale-90 text-xs md:text-base">
-        +
-      </button>
-    </div>
-  </header>
-
-  <!-- НАВИГАЦИЯ -->
-  <nav class="relative z-10 flex justify-center w-full px-4 mt-4 mb-2">
-    <div class="bg-[#111722]/80 backdrop-blur-sm p-1 rounded-xl border border-white/5 w-full max-w-sm flex gap-1 shadow-lg">
-      <button id="tab-gacha" class="flex-1 text-center py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all bg-[#ece5d8] text-slate-900 shadow-md">
-        Призыв
-      </button>
-      <button id="tab-inventory" class="flex-1 text-center py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white">
-        Архив
-        <span id="ui-inventory-count" class="px-1 py-0.5 text-[8px] font-mono rounded bg-slate-800 text-slate-300">0</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- ОСНОВНОЙ КОНТЕНТ -->
-  <main class="relative z-10 flex-1 w-full max-w-6xl mx-auto px-4 pb-8 flex flex-col mt-2">
-    
-    <!-- Вкладка: Гача -->
-    <div id="view-gacha" class="flex flex-col items-center gap-4 w-full flex-1 justify-center max-w-3xl mx-auto">
+    <!-- ШАПКА -->
+    <header class="w-full px-4 md:px-8 py-4 flex justify-between items-start md:items-center relative z-20">
+      <!-- Лого / Название -->
+      <div class="flex items-center gap-2 text-white drop-shadow-md">
+        <span class="text-2xl md:text-3xl font-bold tracking-wide">Молитва</span>
+        <div class="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-sm font-bold opacity-80 cursor-help" title="Правила баннера">?</div>
+      </div>
       
-      <!-- Трекеры Гаранта (Pity) -->
-      <div class="w-full grid grid-cols-2 gap-2 md:gap-4">
-        <!-- Гарант S -->
-        <div class="bg-[#121824]/80 border border-white/5 rounded-xl p-2 md:p-3 flex flex-col gap-1.5 backdrop-blur-md">
-          <div class="flex justify-between items-center">
-            <span class="text-[9px] md:text-xs uppercase tracking-wider text-slate-400">Гарант [S]</span>
-            <span id="ui-s-pity-text" class="text-[10px] md:text-xs font-mono text-amber-400">50</span>
+      <!-- Имитация вкладок баннеров по центру (визуально) -->
+      <div class="hidden md:flex absolute left-1/2 -translate-x-1/2 top-4 gap-2 bg-black/10 backdrop-blur-md p-1 rounded-full shadow-inner">
+        <div class="w-16 h-10 bg-white/90 rounded-full flex items-center justify-center border border-[#d3bc8e] shadow-sm relative overflow-hidden">
+          <span class="text-[10px] font-bold text-slate-700">Новичок</span>
+          <div class="absolute bottom-0 left-0 w-full h-1 bg-[#d3bc8e]"></div>
+        </div>
+        <div class="w-16 h-10 bg-white/30 hover:bg-white/50 rounded-full transition-colors cursor-not-allowed"></div>
+        <div class="w-16 h-10 bg-white/30 hover:bg-white/50 rounded-full transition-colors cursor-not-allowed"></div>
+      </div>
+
+      <!-- Валюты и кнопки управления -->
+      <div class="flex flex-col md:flex-row items-end md:items-center gap-3">
+        <div class="flex items-center gap-4">
+          <!-- Фейковая валюта (Судьбоносные встречи) -->
+          <div class="flex items-center bg-black/30 backdrop-blur-sm border border-white/20 rounded-full pr-3 pl-1 py-1 shadow-inner">
+            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-300 to-pink-300 flex items-center justify-center text-white text-xs shadow-sm">✦</div>
+            <span class="font-bold text-white ml-2 text-sm">0</span>
           </div>
-          <div class="w-full bg-slate-950 rounded-full h-1 overflow-hidden">
-            <div id="ui-s-pity-bar" class="bg-amber-500 h-full transition-all duration-300" style="width: 0%"></div>
+
+          <!-- Кристаллы -->
+          <div class="flex items-center bg-black/30 backdrop-blur-sm border border-white/20 rounded-full pr-1 pl-1 py-1 shadow-inner">
+            <div class="w-6 h-6 flex items-center justify-center text-cyan-300 text-lg drop-shadow-md">✧</div>
+            <span id="ui-crystals" class="font-bold text-white ml-1 mr-3 text-sm">0</span>
+            <button id="btn-open-shop" class="bg-white/90 hover:bg-white text-slate-800 rounded-full w-6 h-6 flex items-center justify-center font-black transition active:scale-90 shadow-md">
+              +
+            </button>
           </div>
         </div>
         
-        <!-- Гарант EX -->
-        <div id="ui-ex-pity-container" class="border rounded-xl p-2 md:p-3 flex flex-col gap-1.5 backdrop-blur-md transition-all bg-[#121824]/80 border-white/5">
-          <div class="flex justify-between items-center">
-            <span id="ui-ex-pity-label" class="text-[9px] md:text-xs uppercase tracking-wider truncate mr-1 text-slate-400">
-              Гарант [EX]
-            </span>
-            <span id="ui-ex-pity-text" class="text-[10px] md:text-xs font-mono text-purple-400">90</span>
+        <!-- Кнопка закрытия (визуальная) -->
+        <button class="text-white/80 hover:text-white text-3xl font-light drop-shadow-md ml-2 hidden md:block">&times;</button>
+      </div>
+    </header>
+
+    <!-- БАННЕР -->
+    <main class="flex-1 flex items-center justify-center w-full px-2 md:px-8 py-8 md:py-4">
+      <div class="w-full max-w-[1000px] bg-gradient-to-br from-[#ffffff] to-[#f4eee6] shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative overflow-hidden flex flex-col md:flex-row rounded-tr-[40px] rounded-bl-[40px] rounded-tl-lg rounded-br-lg min-h-[400px]">
+        
+        <!-- Декоративные элементы фона баннера -->
+        <div class="absolute right-0 top-0 w-full md:w-2/3 h-full bg-gradient-to-l from-[#eedfb8] via-[#f7f0e1]/50 to-transparent pointer-events-none z-0"></div>
+        <div class="absolute top-10 left-1/3 w-32 h-32 bg-gradient-to-br from-[#d3bc8e]/40 to-transparent shape-triangle animate-float pointer-events-none z-0 mix-blend-multiply"></div>
+        <div class="absolute bottom-20 right-1/4 w-48 h-48 bg-gradient-to-br from-[#e4b563]/30 to-transparent shape-triangle animate-float-delayed rotate-45 pointer-events-none z-0 mix-blend-multiply"></div>
+        <div class="absolute -right-10 top-1/2 w-64 h-64 bg-white/40 rounded-full blur-3xl pointer-events-none z-0"></div>
+
+        <!-- ЛЕВАЯ ЧАСТЬ БАННЕРА (Текст) -->
+        <div class="w-full md:w-1/2 p-6 md:p-10 flex flex-col relative z-10 pt-10">
+          <div class="bg-[#f08a5d] text-white text-[10px] md:text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-r-full self-start -ml-6 md:-ml-10 mb-4 shadow-md">
+            Событие молитвы
           </div>
-          <div class="w-full bg-slate-950 rounded-full h-1 overflow-hidden">
-            <div id="ui-ex-pity-bar" class="h-full transition-all duration-300 bg-gradient-to-r from-purple-500 to-cyan-400" style="width: 0%"></div>
+          
+          <h2 class="text-4xl md:text-5xl font-serif text-[#4e5361] mb-2 leading-none">Сигнальный<br><span class="text-5xl md:text-6xl text-[#3b404d]">Прыжок</span></h2>
+          <div class="w-16 h-1 bg-[#d3bc8e] mb-4 mt-2"></div>
+          
+          <p class="text-[#6b7280] text-sm md:text-base font-medium mb-4 leading-snug">
+            Пакет из 10 со скидкой. Идеально для начала путешествия.
+          </p>
+          
+          <div class="bg-[#e47676] text-white text-xs md:text-sm p-4 rounded-sm shadow-inner mb-6 flex gap-3 items-start border-l-4 border-[#c85a5a]">
+            <span class="mt-0.5 text-[#ffebc2] drop-shadow-md">✦</span>
+            <p id="ui-banner-status" class="leading-relaxed drop-shadow-sm font-medium">Каждые 90 молитв гарантируют предмет ранга EX. Аномалия S+ включает 100% гарант.</p>
+          </div>
+          
+          <p class="text-[#9ca3af] italic text-xs md:text-sm mt-auto">"К звездам и безднам, Искатель..."</p>
+        </div>
+
+        <!-- ПРАВАЯ ЧАСТЬ БАННЕРА (Арт/Персонаж) -->
+        <div class="w-full md:w-1/2 relative flex items-center justify-center min-h-[250px] md:min-h-0 z-10">
+          <!-- Заглушка персонажа / Силуэт -->
+          <div class="relative w-full h-full flex flex-col items-center justify-center">
+            <div class="absolute w-48 h-48 md:w-64 md:h-64 bg-white/60 rounded-full blur-2xl"></div>
+            <div class="text-8xl md:text-9xl drop-shadow-2xl z-10 filter drop-shadow-[0_0_20px_rgba(251,191,36,0.8)] animate-pulse">✨</div>
+            
+            <div class="absolute bottom-12 md:bottom-16 right-6 md:right-8 text-right z-20">
+              <span class="text-amber-500 font-black italic text-lg drop-shadow-md pr-1">UP!</span>
+              <h3 class="text-4xl md:text-5xl font-serif text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mb-1">Неизвестный</h3>
+              <div class="flex justify-end text-amber-400 text-lg md:text-xl drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] tracking-widest">★★★★★★</div>
+              <div class="bg-[#2c3e50]/90 text-[#ece5d8] text-[10px] md:text-xs font-bold px-3 py-1 mt-2 inline-block rounded shadow-lg border border-[#34495e]">
+                Главный Сигнал
+              </div>
+            </div>
+          </div>
+
+          <!-- Плашка гаранта -->
+          <div class="absolute bottom-3 right-3 bg-[#1e2532]/80 backdrop-blur-md border border-white/10 text-white text-[10px] md:text-xs px-3 py-2 rounded flex flex-col gap-1 shadow-lg">
+            <div class="flex justify-between gap-4">
+              <span class="text-slate-300">До гаранта EX:</span>
+              <span id="ui-ex-pity-text" class="text-amber-400 font-bold tracking-wider">90 / 90</span>
+            </div>
+            <div class="flex justify-between gap-4">
+              <span class="text-slate-300">До гаранта S:</span>
+              <span id="ui-s-pity-text" class="text-purple-300 font-bold tracking-wider">50 / 50</span>
+            </div>
           </div>
         </div>
       </div>
+    </main>
 
-      <!-- Баннер -->
-      <div class="w-full bg-[#121722]/90 rounded-2xl md:rounded-3xl border border-white/5 shadow-2xl relative overflow-hidden flex-1 min-h-[260px] md:min-h-[340px] flex flex-col justify-between">
-        <div class="absolute inset-0 bg-gradient-to-tr from-[#16222f]/50 via-transparent to-[#111722]/80 z-0"></div>
-        
-        <div class="relative z-10 p-4 md:p-8 flex flex-col items-center text-center flex-1 justify-center">
-          <div id="ui-banner-status" class="inline-block px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-[8px] md:text-[10px] uppercase font-bold text-amber-400 mb-2 md:mb-4">
-            Стандартный цикл вероятности
-          </div>
-          <h2 class="text-xl md:text-3xl font-black text-[#fffbf4] uppercase tracking-wide drop-shadow-md mb-2">
-            Сигнальный прыжок
-          </h2>
-          <p class="text-slate-400 text-[10px] md:text-xs max-w-xs leading-relaxed hidden sm:block">
-            Протокол поиска. Аномалия S+ активирует 100% гарант для кода EX в следующем цикле.
-          </p>
-        </div>
+    <!-- НИЖНЯЯ ПАНЕЛЬ (Кнопки) -->
+    <div class="w-full px-4 md:px-8 py-4 flex flex-col-reverse sm:flex-row justify-between items-center sm:items-end gap-4 relative z-20 mt-auto pb-6">
+      
+      <!-- Слева: Магазин и Инвентарь -->
+      <div class="flex gap-2 md:gap-4 w-full sm:w-auto justify-center sm:justify-start">
+        <button id="btn-shop-bottom" class="bg-[#f0ebe1] hover:bg-white text-[#4e5361] px-5 md:px-8 py-2 md:py-2.5 rounded-full font-bold shadow-md transition-all text-xs md:text-sm border border-[#d3bc8e]/50 flex items-center gap-2">
+          Магазин
+        </button>
+        <button id="btn-inventory" class="bg-[#f0ebe1] hover:bg-white text-[#4e5361] px-5 md:px-8 py-2 md:py-2.5 rounded-full font-bold shadow-md transition-all text-xs md:text-sm border border-[#d3bc8e]/50 flex items-center gap-2">
+          Инвентарь
+          <span id="ui-inventory-count" class="bg-[#4e5361] text-white text-[9px] px-1.5 py-0.5 rounded-full">0</span>
+        </button>
+        <button id="btn-reset-save" class="text-xs text-red-500 hover:text-red-600 underline underline-offset-4 px-2 hidden md:block">
+          Сброс
+        </button>
+      </div>
 
-        <!-- Кнопки Круток -->
-        <div class="relative z-10 flex gap-2 md:gap-4 p-4 md:p-6 w-full justify-center bg-black/20 backdrop-blur-sm border-t border-white/5">
-          <button id="btn-pull-1" class="flex-1 max-w-[160px] bg-slate-800/80 border border-white/10 hover:bg-slate-700 text-[#ece5d8] disabled:opacity-50 py-2.5 md:py-3 px-2 md:px-4 rounded-xl shadow-lg active:scale-95 transition-all text-[10px] md:text-xs flex flex-col items-center">
-            <span class="font-bold uppercase mb-0.5">x1 Прыжок</span>
-            <span class="font-mono text-amber-400 opacity-80">160 ✦</span>
-          </button>
-          <button id="btn-pull-10" class="flex-1 max-w-[160px] bg-[#ece5d8] hover:bg-[#fffbf4] disabled:bg-slate-700 disabled:text-slate-500 text-slate-950 py-2.5 md:py-3 px-2 md:px-4 rounded-xl shadow-xl active:scale-95 transition-all text-[10px] md:text-xs flex flex-col items-center border border-transparent">
-            <span class="font-black uppercase mb-0.5">x10 Прыжок</span>
-            <span class="font-mono font-bold opacity-80">1600 ✦</span>
-          </button>
-        </div>
+      <!-- Справа: Кнопки молитв -->
+      <div class="flex gap-2 md:gap-4 w-full sm:w-auto justify-center sm:justify-end">
+        <button id="btn-pull-1" class="bg-[#f4efe8] hover:bg-white border-2 border-[#d3bc8e] text-[#4e5361] px-6 md:px-10 py-2 md:py-3 rounded-full shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-transform active:scale-95 flex flex-col items-center min-w-[130px] md:min-w-[180px] group">
+          <span class="text-[10px] md:text-xs font-bold text-[#a6987f] mb-0.5 group-hover:text-[#4e5361] transition-colors">Молитва x1</span>
+          <div class="flex items-center gap-1.5"><span class="text-cyan-400 text-lg drop-shadow-sm leading-none">✧</span> <span class="font-bold text-sm md:text-base">160</span></div>
+        </button>
+        <button id="btn-pull-10" class="bg-[#f4efe8] hover:bg-white border-2 border-[#d3bc8e] text-[#4e5361] px-6 md:px-10 py-2 md:py-3 rounded-full shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-transform active:scale-95 flex flex-col items-center min-w-[130px] md:min-w-[180px] group relative overflow-hidden">
+          <div class="absolute top-0 left-0 bg-[#a6cd7a] text-white text-[8px] font-bold px-2 py-0.5 rounded-br-lg z-10">-20%</div>
+          <span class="text-[10px] md:text-xs font-bold text-[#a6987f] mb-0.5 group-hover:text-[#4e5361] transition-colors z-10 relative">Молитва x10</span>
+          <div class="flex items-center gap-1.5 z-10 relative"><span class="text-cyan-400 text-lg drop-shadow-sm leading-none">✧</span> <span class="font-bold text-sm md:text-base">1600</span></div>
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- Вкладка: Инвентарь -->
-    <div id="view-inventory" class="w-full hidden">
-      <div id="inventory-empty" class="text-center py-12 md:py-20 bg-[#121722]/40 rounded-2xl border border-white/5 border-dashed">
-        <p class="text-slate-400 text-xs md:text-sm mb-4">База данных пуста.</p>
+  <!-- ВИД ИНВЕНТАРЯ -->
+  <div id="view-inventory" class="hidden fixed inset-0 z-40 bg-[#121722]/95 backdrop-blur-xl animate-fade-in flex flex-col dark-scroll">
+    <!-- Шапка инвентаря -->
+    <div class="w-full p-4 md:p-6 flex justify-between items-center border-b border-white/10 bg-black/20">
+      <h2 class="text-xl md:text-2xl font-bold text-[#fffbf4] uppercase tracking-wider flex items-center gap-3">
+        <span class="w-1.5 h-6 bg-[#d3bc8e] rounded-full"></span>
+        Архив Данных
+      </h2>
+      <button id="btn-back-gacha" class="text-white bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-bold text-sm transition-colors border border-white/20 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Назад
+      </button>
+    </div>
+    
+    <!-- Сетка инвентаря -->
+    <div class="flex-1 overflow-y-auto p-4 md:p-8">
+      <div id="inventory-empty" class="text-center py-20 bg-white/5 rounded-2xl border border-white/10 border-dashed max-w-xl mx-auto">
+        <p class="text-slate-400 text-sm">Архив пуст. Совершите молитву, чтобы получить данные.</p>
       </div>
-      <div id="inventory-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-3 lg:gap-4 hidden">
+      <div id="inventory-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4 hidden max-w-7xl mx-auto">
         <!-- Карты добавляются сюда скриптом -->
       </div>
     </div>
-  </main>
+  </div>
 
-  <!-- Оверлей результата крутки -->
-  <div id="modal-result" class="fixed inset-0 z-50 bg-[#080b10] flex flex-col items-center justify-between py-10 px-4 animate-fade-in hidden overflow-hidden">
-    
-    <!-- Декоративный фон: Космическая глубина -->
+  <!-- ОВЕРЛЕЙ РЕЗУЛЬТАТА (Gacha Pull Result) -->
+  <!-- Оставлен темным для контраста и эпичности, как в оригинальной игре -->
+  <div id="modal-result" class="fixed inset-0 z-50 bg-[#080b10] flex flex-col items-center justify-between py-10 px-4 animate-fade-in hidden overflow-hidden dark-scroll">
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#1a1c2e] via-[#080b10] to-[#050608] z-0"></div>
-    
-    <!-- Декоративный фон: Техно-сетка -->
-    <div class="absolute inset-0 opacity-30 z-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+    <div class="absolute inset-0 opacity-20 z-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[800px] max-h-[800px] bg-gradient-to-tr from-indigo-600/20 via-purple-600/10 to-amber-500/15 rounded-full blur-[100px] pointer-events-none z-0 animate-pulse"></div>
 
-    <!-- Декоративный фон: Огромная неоновая вспышка в центре -->
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[800px] max-h-[800px] bg-gradient-to-tr from-indigo-600/20 via-purple-600/10 to-amber-500/15 rounded-full blur-[80px] md:blur-[120px] pointer-events-none z-0 animate-pulse"></div>
-
-    <h2 class="relative z-10 text-[10px] md:text-xs font-black tracking-[0.2em] md:tracking-[0.3em] uppercase text-amber-100/70 border-b border-white/10 pb-2 w-full text-center mt-4 drop-shadow-md">
-      Результат сканирования
+    <h2 class="relative z-10 text-[10px] md:text-xs font-black tracking-[0.3em] uppercase text-amber-100/70 border-b border-white/10 pb-2 w-full max-w-3xl text-center mt-4 drop-shadow-md">
+      Полученные предметы
     </h2>
     
-    <div class="relative z-10 w-full max-w-2xl flex-1 flex items-center justify-center">
-      <div id="result-grid" class="grid gap-2 sm:gap-3 md:gap-4 w-full px-2">
+    <div class="relative z-10 w-full flex-1 flex items-center justify-center py-8">
+      <div id="result-grid" class="grid gap-3 sm:gap-4 md:gap-6 w-full max-w-5xl px-2 place-items-center">
         <!-- Карты результата добавляются сюда -->
       </div>
     </div>
 
-    <button id="btn-close-result" class="relative z-10 bg-gradient-to-r from-[#ece5d8] to-[#d3bc8e] text-slate-950 font-black py-3 px-12 md:px-16 rounded-xl shadow-[0_0_20px_rgba(211,188,142,0.2)] active:scale-95 transition-all text-xs uppercase tracking-widest w-full max-w-[280px] mb-4 md:mb-0 hover:shadow-[0_0_30px_rgba(211,188,142,0.4)] border border-[#fffbf4]">
+    <button id="btn-close-result" class="relative z-10 bg-gradient-to-r from-[#ece5d8] to-[#d3bc8e] text-slate-900 hover:text-black font-black py-3 md:py-4 px-16 rounded-full shadow-[0_0_20px_rgba(211,188,142,0.3)] active:scale-95 transition-all text-xs md:text-sm uppercase tracking-widest w-full max-w-[320px] mb-4 hover:shadow-[0_0_30px_rgba(211,188,142,0.5)] border border-white">
       Подтвердить
     </button>
   </div>
 
-  <!-- Оверлей Магазина (Донат) -->
-  <div id="modal-shop" class="fixed inset-0 z-50 bg-[#06080c]/90 flex items-center justify-center backdrop-blur-md animate-fade-in hidden">
-    <div class="bg-[#121722] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] mx-4 relative">
-      <!-- Кнопка закрытия -->
-      <button id="btn-close-shop" class="absolute top-4 right-4 text-slate-400 hover:text-white z-10 p-2 transition-colors">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+  <!-- ОВЕРЛЕЙ МАГАЗИНА -->
+  <div id="modal-shop" class="fixed inset-0 z-50 bg-[#06080c]/90 flex items-center justify-center backdrop-blur-md animate-fade-in hidden dark-scroll">
+    <div class="bg-[#121722] border border-[#d3bc8e]/30 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] mx-4 relative">
+      <button id="btn-close-shop" class="absolute top-4 right-4 text-slate-400 hover:text-white z-10 p-2 transition-colors bg-white/5 rounded-full">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
-      <!-- Заголовок -->
-      <div class="bg-slate-950/50 border-b border-white/5 px-6 py-4">
-        <h2 class="text-lg md:text-xl font-black uppercase tracking-widest text-[#fffbf4] flex items-center gap-2">
-          <span class="w-1.5 h-4 bg-amber-400 rounded-full"></span> Центр Снабжения
+      <div class="bg-[#1a2130] border-b border-[#d3bc8e]/20 px-6 py-5">
+        <h2 class="text-lg md:text-xl font-bold uppercase tracking-widest text-[#ece5d8] flex items-center gap-3">
+          <span class="w-1.5 h-5 bg-[#d3bc8e] rounded-full"></span> Пополнение кристаллов
         </h2>
       </div>
-      <!-- Динамический контент магазина -->
-      <div id="shop-content" class="p-4 md:p-6 overflow-y-auto flex-1">
-        <!-- Сюда рендерятся пакеты или методы оплаты -->
+      <div id="shop-content" class="p-4 md:p-6 overflow-y-auto flex-1 bg-[#121722]">
+        <!-- Контент магазина -->
       </div>
     </div>
   </div>
 
-  <!-- Оверлей загрузки -->
-  <div id="modal-loading" class="fixed inset-0 z-50 bg-[#06080c]/80 flex items-center justify-center backdrop-blur-sm hidden">
-    <div class="w-10 h-10 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin"></div>
+  <!-- ОВЕРЛЕЙ ЗАГРУЗКИ (Портал) -->
+  <div id="modal-loading" class="fixed inset-0 z-50 bg-white/90 flex items-center justify-center backdrop-blur-sm hidden animate-fade-in">
+    <div class="text-center">
+      <div class="w-12 h-12 border-4 border-[#d3bc8e]/30 border-t-[#d3bc8e] rounded-full animate-spin mx-auto mb-4"></div>
+      <h2 class="text-sm font-bold tracking-widest uppercase text-[#4e5361]">Связь с сервером...</h2>
+    </div>
   </div>
 
   <script>
     // --- ДАННЫЕ И НАСТРОЙКИ ---
+    // Обновленные цвета карт, чтобы они лучше смотрелись и на светлом (инвентарь) и на темном (результат) фоне
     const RANKS = [
-      { id: 'EX', name: 'EX', stars: 6, color: 'from-[#ff4554] via-[#ffae34] to-[#7000ff]', text: 'text-[#ffffff] drop-shadow-[0_0_10px_rgba(255,174,52,0.8)] animate-pulse' },
-      { id: 'SSS', name: 'SSS', stars: 5, color: 'from-[#ff9c00] to-[#3a1c00]', text: 'text-[#ffebc2] drop-shadow-[0_0_6px_rgba(255,156,0,0.6)]' },
-      { id: 'SS', name: 'SS', stars: 5, color: 'from-[#e67e22] to-[#2e1a0c]', text: 'text-[#fdebd0]' },
-      { id: 'S_PLUS', name: 'S+', stars: 5, color: 'from-[#cca43b] via-[#5c1d1d] to-[#1f1212]', text: 'text-[#ff9494] drop-shadow-[0_0_5px_rgba(239,68,68,0.7)]' }, 
-      { id: 'S', name: 'S', stars: 5, color: 'from-[#f1c40f] to-[#342803]', text: 'text-[#fef9e7]' },
-      { id: 'A', name: 'A', stars: 4, color: 'from-[#af7ac5] to-[#211427]', text: 'text-[#f5eeeb]' },
-      { id: 'B', name: 'B', stars: 3, color: 'from-[#5499c7] to-[#121f2c]', text: 'text-[#ebf5fb]' },
-      { id: 'C', name: 'C', stars: 3, color: 'from-[#48c9b0] to-[#0e2420]', text: 'text-[#e8f8f5]' },
-      { id: 'D', name: 'D', stars: 2, color: 'from-[#52be80] to-[#112519]', text: 'text-[#eafaf1]' },
-      { id: 'E', name: 'E', stars: 2, color: 'from-[#a6acaf] to-[#222526]', text: 'text-[#f2f4f4]' },
-      { id: 'F', name: 'F', stars: 1, color: 'from-[#797d7f] to-[#17191a]', text: 'text-[#eaecee]' }
+      { id: 'EX', name: 'EX', stars: 6, color: 'from-[#ff4554] via-[#ffae34] to-[#7000ff]', text: 'text-white drop-shadow-[0_0_8px_rgba(255,174,52,0.9)] animate-pulse' },
+      { id: 'SSS', name: 'SSS', stars: 5, color: 'from-[#ff9c00] to-[#803e00]', text: 'text-[#ffebc2] drop-shadow-[0_0_5px_rgba(255,156,0,0.8)]' },
+      { id: 'SS', name: 'SS', stars: 5, color: 'from-[#e67e22] to-[#6e390c]', text: 'text-[#fdebd0]' },
+      { id: 'S_PLUS', name: 'S+', stars: 5, color: 'from-[#cca43b] via-[#8c2d2d] to-[#2f1212]', text: 'text-[#ffbaba] drop-shadow-[0_0_5px_rgba(239,68,68,0.9)]' }, 
+      { id: 'S', name: 'S', stars: 5, color: 'from-[#f1c40f] to-[#7a5e03]', text: 'text-[#fffcf2]' },
+      { id: 'A', name: 'A', stars: 4, color: 'from-[#af7ac5] to-[#4b2e55]', text: 'text-[#f9f5fa]' },
+      { id: 'B', name: 'B', stars: 3, color: 'from-[#5499c7] to-[#1e3d54]', text: 'text-[#f0f7fb]' },
+      { id: 'C', name: 'C', stars: 3, color: 'from-[#48c9b0] to-[#18453d]', text: 'text-[#effaf8]' },
+      { id: 'D', name: 'D', stars: 2, color: 'from-[#52be80] to-[#204a30]', text: 'text-[#f1fbf5]' },
+      { id: 'E', name: 'E', stars: 2, color: 'from-[#a6acaf] to-[#3a4042]', text: 'text-[#f6f7f7]' },
+      { id: 'F', name: 'F', stars: 1, color: 'from-[#797d7f] to-[#2d3133]', text: 'text-[#f0f1f2]' }
     ];
 
     const PULL_COST = 160;
     const S_PITY_LIMIT = 50;
     const EX_PITY_LIMIT = 90;
 
-    // --- ДАННЫЕ МАГАЗИНА ---
     const SHOP_PACKAGES = [
       { id: 'pack1', amount: 60, price: 0.99, bonus: 0, name: 'Кристалл Нова' },
       { id: 'pack2', amount: 300, price: 4.99, bonus: 30, name: 'Горсть Кристаллов' },
@@ -230,45 +308,70 @@
     ];
 
     const PAYMENT_METHODS = [
-      { id: 'pm1', name: 'Межзвездный Кредит', icon: '💳' },
-      { id: 'pm2', name: 'Квант-Пэй', icon: '🌌' },
-      { id: 'pm3', name: 'Астра-Кошелек', icon: '📱' },
-      { id: 'pm4', name: 'Счет Синдиката', icon: '💼' }
+      { id: 'pm1', name: 'Банковская Карта', icon: '💳' },
+      { id: 'pm2', name: 'Электронный Кошелек', icon: '📱' },
+      { id: 'pm3', name: 'Крипто-перевод', icon: '🌌' }
     ];
 
-    // --- СОСТОЯНИЕ (STATE) ---
-    let crystals = 16000;
-    let inventory = [];
-    let sPityCounter = 0;
-    let exPityCounter = 0;
-    let guaranteedExNext = false;
-    let activeTab = 'gacha'; // 'gacha' | 'inventory'
+    // --- СИСТЕМА СОХРАНЕНИЙ ---
+    const STORAGE_KEY = 'warpSim_GenshinStyle_Save';
+
+    function loadProgress() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      }
+      return null;
+    }
+
+    function saveProgress() {
+      const data = { crystals, inventory, sPityCounter, exPityCounter, guaranteedExNext };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      
+      const btnReset = document.getElementById('btn-reset-save');
+      if (crystals !== 16000 || inventory.length > 0) {
+        btnReset.classList.remove('hidden');
+        btnReset.classList.add('md:block');
+      } else {
+        btnReset.classList.add('hidden');
+        btnReset.classList.remove('md:block');
+      }
+    }
+
+    function resetProgress() {
+      if(confirm('Вы уверены, что хотите полностью очистить историю молитв и баланс?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        window.location.reload();
+      }
+    }
+
+    // --- ИНИЦИАЛИЗАЦИЯ СОСТОЯНИЯ ---
+    const savedData = loadProgress();
+    let crystals = savedData ? savedData.crystals : 16000;
+    let inventory = savedData ? savedData.inventory : [];
+    let sPityCounter = savedData ? savedData.sPityCounter : 0;
+    let exPityCounter = savedData ? savedData.exPityCounter : 0;
+    let guaranteedExNext = savedData ? savedData.guaranteedExNext : false;
 
     // --- ДОМ-ЭЛЕМЕНТЫ ---
     const elCrystals = document.getElementById('ui-crystals');
     const elInvCount = document.getElementById('ui-inventory-count');
     
-    // Вкладки
-    const tabGachaBtn = document.getElementById('tab-gacha');
-    const tabInvBtn = document.getElementById('tab-inventory');
     const viewGacha = document.getElementById('view-gacha');
     const viewInventory = document.getElementById('view-inventory');
     
-    // Гарант UI
-    const sPityText = document.getElementById('ui-s-pity-text');
-    const sPityBar = document.getElementById('ui-s-pity-bar');
-    const exPityCont = document.getElementById('ui-ex-pity-container');
-    const exPityLabel = document.getElementById('ui-ex-pity-label');
     const exPityText = document.getElementById('ui-ex-pity-text');
-    const exPityBar = document.getElementById('ui-ex-pity-bar');
+    const sPityText = document.getElementById('ui-s-pity-text');
     const bannerStatus = document.getElementById('ui-banner-status');
 
-    // Кнопки и модалки
+    const btnShopTop = document.getElementById('btn-open-shop');
+    const btnShopBottom = document.getElementById('btn-shop-bottom');
+    const btnInv = document.getElementById('btn-inventory');
+    const btnBackGacha = document.getElementById('btn-back-gacha');
     const btnPull1 = document.getElementById('btn-pull-1');
     const btnPull10 = document.getElementById('btn-pull-10');
-    const btnCheat = document.getElementById('btn-cheat');
+    const btnResetSave = document.getElementById('btn-reset-save');
     
-    // Элементы магазина
     const modalShop = document.getElementById('modal-shop');
     const shopContent = document.getElementById('shop-content');
     const btnCloseShop = document.getElementById('btn-close-shop');
@@ -278,34 +381,34 @@
     const resultGrid = document.getElementById('result-grid');
     const btnCloseResult = document.getElementById('btn-close-result');
     
-    // Инвентарь UI
     const invEmpty = document.getElementById('inventory-empty');
     const invGrid = document.getElementById('inventory-grid');
 
     // --- ЛОГИКА ---
 
-    // Генерация HTML карточки
     function generateCardHTML(card, delayMs = 0) {
       const isScam = card.rank.id === 'S_PLUS';
-      const starsHTML = Array(card.rank.stars).fill('<span class="drop-shadow-[0_0_2px_#ffcc00]">✦</span>').join('');
+      const starsHTML = Array(card.rank.stars).fill('<span class="drop-shadow-[0_0_3px_#ffcc00]">✦</span>').join('');
       const animationStyle = delayMs > 0 ? `style="animation-delay: ${delayMs}ms;"` : '';
       const animClass = delayMs > 0 ? 'animate-zoom-in' : '';
 
       return `
-        <div class="w-full max-w-[110px] sm:max-w-[140px] mx-auto ${animClass}" ${animationStyle}>
-          <div class="relative aspect-[2/3] rounded-tl-none rounded-br-2xl rounded-tr-xl rounded-bl-xl overflow-hidden border border-white/10 bg-gradient-to-b ${card.rank.color} flex flex-col justify-between p-1.5 md:p-2 shadow-lg group transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-white/30 w-full">
-            <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:8px_8px] pointer-events-none"></div>
-            ${isScam ? '<div class="absolute inset-0 bg-red-950/40 mix-blend-color-burn animate-pulse z-0"></div>' : ''}
+        <div class="w-full max-w-[120px] sm:max-w-[150px] mx-auto ${animClass}" ${animationStyle}>
+          <div class="relative aspect-[2/3] rounded-tl-none rounded-br-2xl rounded-tr-xl rounded-bl-xl overflow-hidden border border-white/20 bg-gradient-to-b ${card.rank.color} flex flex-col justify-between p-1.5 md:p-2 shadow-[0_5px_15px_rgba(0,0,0,0.3)] group transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-white/50 w-full">
+            <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none opacity-50"></div>
+            ${isScam ? '<div class="absolute inset-0 bg-red-950/60 mix-blend-color-burn animate-pulse z-0"></div>' : ''}
+            
             <div class="flex justify-between items-start z-10">
-              <div class="px-1.5 py-0.5 text-[10px] md:text-xs font-black tracking-widest rounded bg-black/40 backdrop-blur-md ${card.rank.text}">
+              <div class="px-2 py-0.5 text-[10px] md:text-xs font-black tracking-widest rounded bg-black/50 backdrop-blur-md ${card.rank.text} border border-white/10">
                 ${card.rank.name}
               </div>
             </div>
-            <div class="w-full bg-slate-950/70 border border-white/5 backdrop-blur-md rounded-lg md:rounded-xl p-1 z-10 space-y-0.5 flex flex-col items-center">
+            
+            <div class="w-full bg-black/60 border border-white/10 backdrop-blur-md rounded-lg md:rounded-xl p-1 z-10 space-y-1 flex flex-col items-center">
               <div class="flex flex-wrap justify-center gap-[1px] text-[#ffcc00] text-[8px] md:text-[10px]">
                 ${starsHTML}
               </div>
-              <p class="text-[#ece5d8] text-[9px] md:text-[11px] font-medium text-center truncate tracking-tight w-full px-0.5">
+              <p class="text-[#ece5d8] text-[9px] md:text-xs font-bold text-center truncate tracking-tight w-full px-1 drop-shadow-md">
                 ${card.name}
               </p>
             </div>
@@ -314,65 +417,45 @@
       `;
     }
 
-    // Обновление общего UI
     function updateUI() {
       elCrystals.innerText = crystals.toLocaleString();
       elInvCount.innerText = inventory.length;
 
-      // Обновление кнопок круток
       btnPull1.disabled = crystals < PULL_COST;
       btnPull10.disabled = crystals < PULL_COST * 10;
-
-      // Обновление гаранта S
-      sPityText.innerText = S_PITY_LIMIT - sPityCounter;
-      sPityBar.style.width = `${(sPityCounter / S_PITY_LIMIT) * 100}%`;
-
-      // Обновление гаранта EX
-      exPityText.innerText = EX_PITY_LIMIT - exPityCounter;
-      exPityBar.style.width = `${(exPityCounter / EX_PITY_LIMIT) * 100}%`;
       
+      // Обновляем визуальное отображение кнопок при нехватке средств
+      if (crystals < PULL_COST) btnPull1.classList.add('opacity-50', 'cursor-not-allowed');
+      else btnPull1.classList.remove('opacity-50', 'cursor-not-allowed');
+      
+      if (crystals < PULL_COST * 10) btnPull10.classList.add('opacity-50', 'cursor-not-allowed');
+      else btnPull10.classList.remove('opacity-50', 'cursor-not-allowed');
+
+      // Логика отображения гаранта (считаем "осталось круток", а не "сделано круток")
+      const remainingEx = EX_PITY_LIMIT - exPityCounter;
+      const remainingS = S_PITY_LIMIT - sPityCounter;
+      
+      exPityText.innerText = `${remainingEx} / ${EX_PITY_LIMIT}`;
+      sPityText.innerText = `${remainingS} / ${S_PITY_LIMIT}`;
+
       if (guaranteedExNext) {
-        exPityCont.className = "border rounded-xl p-2 md:p-3 flex flex-col gap-1.5 backdrop-blur-md transition-all bg-amber-500/10 border-amber-500/40";
-        exPityLabel.className = "text-[9px] md:text-xs uppercase tracking-wider truncate mr-1 text-amber-400";
-        exPityLabel.innerText = "100% EX Гарант";
-        exPityText.className = "text-[10px] md:text-xs font-mono text-amber-400";
-        exPityBar.className = "h-full transition-all duration-300 bg-amber-400 shadow-[0_0_8px_#fbbf24]";
-        bannerStatus.innerText = "Активен протокол абсолютной редкости";
+        exPityText.classList.replace('text-amber-400', 'text-red-400');
+        exPityText.innerText = `100% GARANT: ${remainingEx}`;
+        bannerStatus.innerHTML = '<span class="text-red-300 font-bold">ВНИМАНИЕ:</span> Обнаружена аномалия S+. Следующий сигнал EX будет 100% целевым.';
+        bannerStatus.parentElement.classList.replace('bg-[#e47676]', 'bg-[#c85a5a]');
       } else {
-        exPityCont.className = "border rounded-xl p-2 md:p-3 flex flex-col gap-1.5 backdrop-blur-md transition-all bg-[#121824]/80 border-white/5";
-        exPityLabel.className = "text-[9px] md:text-xs uppercase tracking-wider truncate mr-1 text-slate-400";
-        exPityLabel.innerText = "Гарант [EX]";
-        exPityText.className = "text-[10px] md:text-xs font-mono text-purple-400";
-        exPityBar.className = "h-full transition-all duration-300 bg-gradient-to-r from-purple-500 to-cyan-400";
-        bannerStatus.innerText = "Стандартный цикл вероятности";
+        exPityText.classList.replace('text-red-400', 'text-amber-400');
+        bannerStatus.innerText = 'Каждые 90 молитв гарантируют предмет ранга EX. Аномалия S+ включает 100% гарант.';
+        bannerStatus.parentElement.classList.replace('bg-[#c85a5a]', 'bg-[#e47676]');
       }
+
+      saveProgress();
     }
 
-    // Переключение вкладок
-    function switchTab(tab) {
-      activeTab = tab;
+    function openInventory() {
+      viewGacha.classList.add('hidden');
+      viewInventory.classList.remove('hidden');
       
-      if (tab === 'gacha') {
-        tabGachaBtn.className = "flex-1 text-center py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all bg-[#ece5d8] text-slate-900 shadow-md";
-        tabInvBtn.className = "flex-1 text-center py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white";
-        elInvCount.className = "px-1 py-0.5 text-[8px] font-mono rounded bg-slate-800 text-slate-300";
-        
-        viewGacha.classList.remove('hidden');
-        viewInventory.classList.add('hidden');
-      } else {
-        tabGachaBtn.className = "flex-1 text-center py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-white";
-        tabInvBtn.className = "flex-1 text-center py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 bg-[#ece5d8] text-slate-900 shadow-md";
-        elInvCount.className = "px-1 py-0.5 text-[8px] font-mono rounded bg-slate-900 text-white";
-        
-        viewGacha.classList.add('hidden');
-        viewInventory.classList.remove('hidden');
-        
-        // Рендер инвентаря только при открытии вкладки (оптимизация)
-        renderInventory();
-      }
-    }
-
-    function renderInventory() {
       if (inventory.length === 0) {
         invEmpty.classList.remove('hidden');
         invGrid.classList.add('hidden');
@@ -383,7 +466,11 @@
       }
     }
 
-    // Логика вытягивания одной карты
+    function closeInventory() {
+      viewInventory.classList.add('hidden');
+      viewGacha.classList.remove('hidden');
+    }
+
     function pullSingleCard() {
       sPityCounter++;
       exPityCounter++;
@@ -415,9 +502,7 @@
         
         for (const rank of RANKS) {
           if (rank.id === 'S_PLUS') continue;
-          
           let chance = rank.chance || (rank.id === 'EX' ? 0.1 : rank.id === 'SSS' ? 0.4 : rank.id === 'SS' ? 1.0 : rank.id === 'S' ? 2.5 : rank.id === 'A' ? 6.0 : rank.id === 'B' ? 10.0 : rank.id === 'C' ? 15.0 : rank.id === 'D' ? 20.0 : rank.id === 'E' ? 20.0 : 25.0);
-          
           cumulativeChance += chance;
           if (rand <= cumulativeChance) {
             selectedCardRank = rank;
@@ -433,20 +518,17 @@
         } else {
           const rankIndex = RANKS.findIndex(r => r.id === selectedCardRank.id);
           const sIndex = RANKS.findIndex(r => r.id === 'S');
-          if (rankIndex <= sIndex) {
-             sPityCounter = 0;
-          }
+          if (rankIndex <= sIndex) { sPityCounter = 0; }
         }
       }
 
       return {
         id: Math.random().toString(36).substr(2, 9) + Date.now(),
         rank: selectedCardRank,
-        name: selectedCardRank.id === 'S_PLUS' ? 'Сломанное Наследие' : `Сигнатура ${selectedCardRank.name}`,
+        name: selectedCardRank.id === 'S_PLUS' ? 'Аномальный Код' : `Сигнал ${selectedCardRank.name}`,
       };
     }
 
-    // Процесс призыва
     function handlePull(amount) {
       const totalCost = PULL_COST * amount;
       if (crystals < totalCost) return;
@@ -458,43 +540,28 @@
 
       setTimeout(() => {
         const newCards = [];
-        for (let i = 0; i < amount; i++) {
-          newCards.push(pullSingleCard());
-        }
+        for (let i = 0; i < amount; i++) { newCards.push(pullSingleCard()); }
 
-        // Сортировка по редкости
         newCards.sort((a, b) => RANKS.findIndex(r => r.id === a.rank.id) - RANKS.findIndex(r => r.id === b.rank.id));
-
-        // Добавляем в начало инвентаря
         inventory = [...newCards, ...inventory];
         
         updateUI();
 
-        // Показываем результат
         modalLoading.classList.add('hidden');
         showResultModal(newCards);
 
-      }, 400); // Имитация задержки
+      }, 600); 
     }
 
     function showResultModal(cards) {
-      // Настраиваем сетку в зависимости от кол-ва карт
-      resultGrid.className = `grid gap-2 sm:gap-3 md:gap-4 w-full px-2 ${cards.length === 1 ? 'grid-cols-1 max-w-[200px]' : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'}`;
-      
-      // Генерируем HTML карточек с задержкой анимации
-      resultGrid.innerHTML = cards.map((c, idx) => generateCardHTML(c, idx * 50)).join('');
-      
+      // Сетка 1x1 или 5x2 (в зависимости от размера экрана и кол-ва)
+      let gridClass = cards.length === 1 ? 'grid-cols-1 max-w-[200px]' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5';
+      resultGrid.className = `grid gap-4 sm:gap-6 w-full max-w-5xl px-2 place-items-center ${gridClass}`;
+      resultGrid.innerHTML = cards.map((c, idx) => generateCardHTML(c, idx * 80)).join('');
       modalResult.classList.remove('hidden');
     }
 
-    // --- ОБРАБОТЧИКИ СОБЫТИЙ ---
-    tabGachaBtn.addEventListener('click', () => switchTab('gacha'));
-    tabInvBtn.addEventListener('click', () => switchTab('inventory'));
-    
-    btnPull1.addEventListener('click', () => handlePull(1));
-    btnPull10.addEventListener('click', () => handlePull(10));
-    
-    // --- ЛОГИКА МАГАЗИНА ---
+    // --- МАГАЗИН ---
     function openShop() {
       modalShop.classList.remove('hidden');
       renderShopGrid();
@@ -506,20 +573,19 @@
 
     function renderShopGrid() {
       shopContent.innerHTML = `
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto">
           ${SHOP_PACKAGES.map(pack => `
-            <div onclick="selectPackage('${pack.id}')" class="bg-[#1a2233] border border-white/10 rounded-xl p-3 md:p-5 flex flex-col items-center justify-between cursor-pointer hover:border-amber-400 hover:shadow-[0_0_15px_rgba(251,191,36,0.15)] transition-all group relative overflow-hidden aspect-[4/3]">
-              ${pack.bonus > 0 ? `<div class="absolute top-0 left-0 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-900 text-[9px] md:text-xs font-black px-2 md:px-3 py-0.5 md:py-1 rounded-br-lg shadow-md z-10">БОНУС +${pack.bonus}</div>` : ''}
-              <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-0 opacity-50 group-hover:opacity-80 transition-opacity"></div>
+            <div onclick="selectPackage('${pack.id}')" class="bg-[#1a2130] border border-[#d3bc8e]/20 rounded-xl p-4 md:p-6 flex flex-col items-center justify-between cursor-pointer hover:border-[#d3bc8e] hover:shadow-[0_0_20px_rgba(211,188,142,0.15)] transition-all group relative overflow-hidden">
+              ${pack.bonus > 0 ? `<div class="absolute top-0 left-0 bg-[#a6cd7a] text-white text-[9px] md:text-xs font-bold px-3 py-1 rounded-br-lg shadow-md z-10">БОНУС +${pack.bonus}</div>` : ''}
               
-              <div class="z-10 mt-3 md:mt-4 flex flex-col items-center">
-                <span class="text-4xl md:text-5xl drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] group-hover:scale-110 transition-transform duration-300">✦</span>
-                <span class="text-amber-400 font-bold mt-1 md:mt-2 font-mono text-base md:text-xl">${pack.amount.toLocaleString()}</span>
-                <span class="text-slate-400 text-[8px] md:text-[10px] uppercase tracking-widest text-center mt-1 hidden sm:block">${pack.name}</span>
+              <div class="z-10 mt-6 flex flex-col items-center">
+                <span class="text-4xl md:text-6xl text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] group-hover:scale-110 transition-transform duration-300 mb-2">✧</span>
+                <span class="text-[#ece5d8] font-bold font-mono text-xl md:text-2xl">${pack.amount.toLocaleString()}</span>
+                <span class="text-slate-500 text-[9px] md:text-xs uppercase tracking-widest text-center mt-1 font-bold">${pack.name}</span>
               </div>
 
-              <div class="z-10 w-full mt-2 md:mt-4">
-                <div class="w-full bg-[#ece5d8] text-slate-900 font-black text-center py-1.5 md:py-2 rounded md:rounded-md text-xs md:text-sm group-hover:bg-amber-400 transition-colors shadow-inner">
+              <div class="z-10 w-full mt-6">
+                <div class="w-full border border-[#d3bc8e]/50 text-[#d3bc8e] font-bold text-center py-2 rounded-full text-sm group-hover:bg-[#d3bc8e] group-hover:text-[#121722] transition-colors">
                   $${pack.price}
                 </div>
               </div>
@@ -535,31 +601,30 @@
 
       shopContent.innerHTML = `
         <div class="flex flex-col h-full max-w-xl mx-auto animate-fade-in">
-          <button onclick="renderShopGrid()" class="self-start text-[10px] md:text-xs uppercase tracking-widest font-bold text-slate-400 hover:text-white mb-6 flex items-center gap-2 transition-colors">
+          <button onclick="renderShopGrid()" class="self-start text-[10px] md:text-xs uppercase tracking-widest font-bold text-slate-400 hover:text-white mb-6 flex items-center gap-2 transition-colors bg-white/5 px-4 py-2 rounded-full">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
             Назад к товарам
           </button>
           
-          <div class="bg-[#161f2e] border border-white/5 rounded-2xl p-6 mb-8 text-center shadow-inner relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent opacity-50"></div>
-            <h3 class="text-slate-400 text-[10px] md:text-xs uppercase tracking-widest mb-3">Ордер на транзакцию</h3>
-            <div class="text-4xl md:text-5xl font-black text-white mb-3 tracking-tighter">$${pack.price}</div>
-            <div class="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-4 py-1.5 rounded-full text-amber-400 text-sm md:text-base font-mono font-bold shadow-[0_0_10px_rgba(251,191,36,0.1)]">
-              Пополнение: +${(pack.amount + pack.bonus).toLocaleString()} ✦
+          <div class="bg-[#1a2130] border border-[#d3bc8e]/30 rounded-2xl p-8 mb-8 text-center shadow-inner relative overflow-hidden">
+            <h3 class="text-slate-400 text-[10px] md:text-xs uppercase tracking-widest mb-4">Сумма к оплате</h3>
+            <div class="text-4xl md:text-6xl font-serif text-[#d3bc8e] mb-4">$${pack.price}</div>
+            <div class="inline-flex items-center justify-center gap-2 bg-[#d3bc8e]/10 border border-[#d3bc8e]/30 px-6 py-2 rounded-full text-[#ece5d8] text-sm md:text-base font-bold shadow-[0_0_10px_rgba(211,188,142,0.1)] w-full">
+              Итого получено: <span class="text-cyan-400">✧ ${(pack.amount + pack.bonus).toLocaleString()}</span>
             </div>
           </div>
 
-          <h3 class="text-xs md:text-sm font-bold text-[#fffbf4] mb-4 uppercase tracking-widest flex items-center gap-2">
-            <span class="w-1 h-3 bg-indigo-500 rounded-full"></span> Метод авторизации:
+          <h3 class="text-xs md:text-sm font-bold text-[#ece5d8] mb-4 uppercase tracking-widest flex items-center gap-2">
+            <span class="w-1.5 h-4 bg-[#d3bc8e] rounded-full"></span> Выберите метод:
           </h3>
           <div class="space-y-3">
             ${PAYMENT_METHODS.map(method => `
-              <button onclick="processPayment('${pack.id}', '${method.id}')" class="w-full bg-[#1a2233] border border-white/10 hover:border-indigo-400 rounded-xl p-4 md:p-5 flex items-center justify-between group transition-all hover:shadow-[0_0_20px_rgba(99,102,241,0.1)]">
+              <button onclick="processPayment('${pack.id}', '${method.id}')" class="w-full bg-[#1a2130] border border-[#d3bc8e]/20 hover:border-[#d3bc8e] rounded-xl p-4 flex items-center justify-between group transition-all">
                 <div class="flex items-center gap-4">
                   <span class="text-2xl drop-shadow-md group-hover:scale-110 transition-transform">${method.icon}</span>
-                  <span class="font-bold tracking-wide text-slate-300 group-hover:text-white text-sm md:text-base">${method.name}</span>
+                  <span class="font-bold text-slate-300 group-hover:text-white text-sm">${method.name}</span>
                 </div>
-                <span class="text-[10px] md:text-xs font-black uppercase tracking-widest bg-white/5 px-4 py-2 rounded-lg text-slate-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors">Оплатить</span>
+                <span class="text-[10px] md:text-xs font-bold uppercase tracking-widest bg-white/5 px-4 py-2 rounded-lg text-slate-400 group-hover:bg-[#d3bc8e] group-hover:text-[#121722] transition-colors">Оплатить</span>
               </button>
             `).join('')}
           </div>
@@ -574,46 +639,50 @@
       closeShop();
       modalLoading.classList.remove('hidden');
 
-      // Имитация задержки "обработки" от банка/провайдера
       setTimeout(() => {
         const totalGained = pack.amount + pack.bonus;
         crystals += totalGained;
         updateUI();
         modalLoading.classList.add('hidden');
         
-        // Всплывающее красивое уведомление о покупке
         const notification = document.createElement('div');
-        notification.className = 'fixed top-[10%] left-1/2 -translate-x-1/2 bg-[#161f2e]/95 border border-amber-400/30 text-[#fffbf4] px-6 py-4 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-[100] animate-zoom-in flex items-center gap-4 backdrop-blur-md';
+        notification.className = 'fixed top-[15%] left-1/2 -translate-x-1/2 bg-[#121722]/95 border border-[#d3bc8e]/50 text-[#fffbf4] px-6 py-4 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-[100] animate-zoom-in flex items-center gap-4 backdrop-blur-md';
         notification.innerHTML = `
-          <div class="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center border border-amber-400/50 text-xl shadow-[0_0_10px_rgba(251,191,36,0.3)]">✦</div>
+          <div class="w-8 h-8 text-cyan-400 flex items-center justify-center text-2xl drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">✧</div>
           <div>
-            <div class="text-[10px] uppercase tracking-widest text-amber-400 font-bold mb-0.5">Транзакция успешна</div>
-            <div class="text-sm font-mono font-bold">+ ${totalGained.toLocaleString()} Кристаллов</div>
+            <div class="text-[10px] uppercase tracking-widest text-[#d3bc8e] font-bold">Оплата успешна</div>
+            <div class="text-sm font-bold text-white">+ ${totalGained.toLocaleString()} Кристаллов</div>
           </div>
         `;
         document.body.appendChild(notification);
         
-        // Удаление уведомления через 3 секунды
         setTimeout(() => {
           notification.classList.add('opacity-0', '-translate-y-4');
           notification.style.transition = 'all 0.5s ease-out';
           setTimeout(() => notification.remove(), 500);
         }, 3000);
-        
-      }, 1500); // 1.5 секунды фейковой загрузки
+      }, 1500); 
     }
 
-    // Подключение кнопок магазина
-    btnCheat.addEventListener('click', openShop);
+    // --- ПРИВЯЗКА СОБЫТИЙ ---
+    btnInv.addEventListener('click', openInventory);
+    btnBackGacha.addEventListener('click', closeInventory);
+    
+    btnPull1.addEventListener('click', () => handlePull(1));
+    btnPull10.addEventListener('click', () => handlePull(10));
+    
+    btnShopTop.addEventListener('click', openShop);
+    btnShopBottom.addEventListener('click', openShop);
     btnCloseShop.addEventListener('click', closeShop);
+    
+    btnResetSave.addEventListener('click', resetProgress);
 
     btnCloseResult.addEventListener('click', () => {
       modalResult.classList.add('hidden');
       resultGrid.innerHTML = '';
-      if (activeTab === 'inventory') renderInventory();
+      if (!viewInventory.classList.contains('hidden')) renderInventory();
     });
 
-    // Инициализация
     updateUI();
 
   </script>
