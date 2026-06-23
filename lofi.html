@@ -259,19 +259,59 @@
   <audio id="audioEl" crossorigin="anonymous" preload="none"></audio>
 
   <script>
-    const stations = [
-      { name: 'Lofi Radio', url: 'https://lofi.stream.laut.fm/lofi' },
-      { name: 'Lofi Girl Similar', url: 'http://stream.zeno.fm/0r0xa792kwzuv' },
-      { name: 'Just Chill', url: 'http://usa9.fastcast4u.com/proxy/jamz?mp=/1' },
-      { name: 'FluxFM Chillhop', url: 'https://streams.fluxfm.de/Chillhop/mp3-128/streams.fluxfm.de/' },
-      { name: 'Drone Zone', url: 'https://ice2.somafm.com/dronezone-128-mp3' },
-      { name: 'SomaFM Groove Salad', url: 'https://ice2.somafm.com/groovesalad-128-mp3' },
-      { name: 'Radio Paradise Mellow', url: 'http://stream.radioparadise.com/mellow-128' },
-      { name: 'SomaFM Space Station Soma', url: 'https://ice2.somafm.com/spacestation-128-mp3' },
-      { name: 'Nightwave Plaza', url: 'https://radio.plaza.one/ogg' },
-      { name: 'ChillHop Radio', url: 'http://media-the.musicradio.com/ChillMP3' }
-    ];
-
+// ═══════════════════════════════════════════════════════
+//  STATION DATA
+// ═══════════════════════════════════════════════════════
+const stations = [
+  { "name": "Lofi Radio", "url": "https://lofi.stream.laut.fm/lofi" },
+  { "name": "Lofi Girl Similar", "url": "http://stream.zeno.fm/0r0xa792kwzuv" },
+  { "name": "Just Chill", "url": "http://usa9.fastcast4u.com/proxy/jamz?mp=/1" },
+  { "name": "FluxFM Chillhop", "url": "https://streams.fluxfm.de/Chillhop/mp3-128/streams.fluxfm.de/" },
+  { "name": "Drone Zone", "url": "https://ice2.somafm.com/dronezone-128-mp3" },
+  { "name": "SomaFM Groove Salad", "url": "https://ice2.somafm.com/groovesalad-128-mp3" },
+  { "name": "Radio Paradise Mellow", "url": "http://stream.radioparadise.com/mellow-128" },
+  { "name": "SomaFM Space Station Soma", "url": "https://ice2.somafm.com/spacestation-128-mp3" },
+  { "name": "Traxx FM Lofi (Swiss)", "url": "http://traxx012.ice.infomaniak.ch/traxx012-low.mp3" },
+  { "name": "Smooth Chill (UK)", "url": "http://media-ice.musicradio.com/SmoothChillMP3" },
+  { "name": "Abdullah Lofi", "url": "https://stream.zeno.fm/f3wvbbqmdg8uv" },
+  { "name": "SomaFM Deep Space One", "url": "https://ice2.somafm.com/deepspaceone-128-mp3" },
+  { "name": "SomaFM Cliqhop IDM", "url": "https://ice2.somafm.com/cliqhop-128-mp3" },
+  { "name": "SomaFM Fluid", "url": "https://ice2.somafm.com/fluid-128-mp3" },
+  { "name": "Lofi Radio RU", "url": "https://live.lofiradio.ru/lofi_mp3_128" },
+  { "name": "Nightwave Plaza", "url": "https://radio.plaza.one/ogg" },
+  { "name": "0nlineradio LO-FI", "url": "https://stream.0nlineradio.com/lo-fi?ref=radiobrowser" },
+  { "name": "0R - LO-FI", "url": "https://0nlineradio.radioho.st/0r-lo-fi?ref=radio-browser26" },
+  { "name": "b3cks-radio", "url": "https://radio.b3ck.com/listen/b3cks-radio/radio.mp3" },
+  { "name": "BGMVibes", "url": "https://radio.sutekihost.com/listen/bgmvibes/radio.mp3" },
+  { "name": "Box Lofi Radio 2", "url": "https://stream.zeno.fm/tabzverz0fctv" },
+  { "name": "Epic Lounge - Workday", "url": "https://stream.epic-lounge.com/workday-lounge?ref=radiobrowser" },
+  { "name": "Hotmix LoFi", "url": "https://streaming.hotmixradio.com/hotmix-lofi-en-mp3" },
+  { "name": "Hunter.FM Lo-Fi", "url": "https://live.hunter.fm/lofi_normal" },
+  { "name": "I Love Chillhop", "url": "https://streams.ilovemusic.de/iloveradio17.mp3" },
+  { "name": "ISEKOI Chill Zone (MP3)", "url": "https://public.isekoi-radio.com/listen/chill/radio.mp3" },
+  { "name": "ISEKOI Chill Zone (FLAC)", "url": "https://public.isekoi-radio.com/listen/chill/radio.flac" },
+  { "name": "MoE Lofi", "url": "http://stream.zeno.fm/3u1qndyk8rhvv" },
+  { "name": "NIA Radio Lo-Fi", "url": "https://radio.nia.nc/radio/8020/lofi-hq-stream.aac" },
+  { "name": "Nightwave Plaza OPUS 96", "url": "http://radio.plaza.one/opus" },
+  { "name": "Nightwave Plaza MP3", "url": "http://radio.plaza.one/mp3" },
+  { "name": "Radio Digital Malayali", "url": "https://radio.digitalmalayali.in/listen/stream/radio.mp3" },
+  { "name": "REYFM Lofi 128k", "url": "https://listen.reyfm.de/lofi_128kbps.mp3" },
+  { "name": "REYFM Lofi 64k", "url": "https://listen.reyfm.de/lofi_64kbps.mp3" },
+  { "name": "REYFM Lofi 320k", "url": "https://listen.reyfm.de/lofi_320kbps.mp3" },
+  { "name": "I Love Music - I Love Chillhop", "url": "https://ilm.stream35.radiohost.de/ilm_ilovechillhop_mp3-192?upd-meta&upd-scheme=https&_art=dD0xNzY4NDUwMTU1JmQ9MzQxNTMxNDFhODdjYmQ4MjA5NjE" },
+  { "name": "Neverland", "url": "https://stream-166.zeno.fm/oaqigxpfjzqvv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiJvYXFpZ3hwZmp6cXZ2IiwiaG9zdCI6InN0cmVhbS0xNjYuemVuby5mbSIsInJ0dGwiOjUsImp0aSI6IjFnRWVwSWpIUXJXVElZSU1pLVlrenciLCJpYXQiOjE3NDgxMzU4OTUsImV4cCI6MTc0ODEzNTk1NX0.b4Llu6iAJk1NPa2U9OhIjm_3CZQyLuRJZWiNecQWBdY" },
+  { "name": "Zocker-FM (Alt)", "url": "https://zockerfm.stream.laut.fm/zockerfm?t302=2026-03-24_21-33-02&uuid=6eac6792-303d-4e5d-ad71-01368a022035" },
+  { "name": "Radio Record Lo-Fi", "url": "https://radiorecord.hostingradio.ru/lofi96.aacp" },
+  { "name": "Epic Lounge - JAZZHOP", "url": "https://stream.epic-lounge.com/jazzhop-lounge?ref=radiobrowser" },
+  { "name": "Red Wine Radio", "url": "https://stream.zeno.fm/pcbduafehg0uv" },
+  { "name": "Radio ZUM4", "url": "https://streams.radiozum.md/listen/zum4/ZUM4" },
+  { "name": "MonteCarlo Nights", "url": "https://mc-chilllonge.hostingradio.ru/chilllonge96.aacp" },
+  { "name": "24Dubstep CalmFlow", "url": "https://stream.24dubstep.pl/listen/chillstep/mp3_normal" },
+  { "name": "Palmera Blanca Daystream", "url": "https://daystream.palmerablanca.com/daystream-128.mp3" },
+  { "name": "DooshFM", "url": "https://a9.asurahosting.com:7050/stream" },
+  { "name": "Rundfunkautist", "url": "https://rundfunkautist.stream.laut.fm/rundfunkautist?t302=2026-01-30_00-58-09&uuid=f01d031f-bac7-40fd-8688-579aa0ab9b63" },
+  { "name": "ChillHop Radio", "url": "http://media-the.musicradio.com/ChillMP3" }
+];
     const icons = ['🎵', '🎶', '🎧', '🌙', '☁️', '🌊', '🌿', '✨', '🎹', '🌸'];
     function getIcon(idx) { return icons[idx % icons.length]; }
 
